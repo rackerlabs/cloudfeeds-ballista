@@ -1,0 +1,29 @@
+apply plugin: 'scala'
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+group = 'com.rackspace.feeds.ballista'
+version = '1.0.0-SNAPSHOT'
+sourceCompatibility = 1.7
+
+dependencies {
+    compile 'org.scala-lang:scala-library:2.10.4'
+    compile 'org.scala-lang:scala-reflect:2.10.4'
+    compile 'org.slf4j:slf4j-api:1.7.7'
+    compile 'ch.qos.logback:logback-classic:1.1.2'
+    compile 'com.typesafe:config:1.2.1'
+    compile 'org.postgresql:postgresql:9.3-1102-jdbc41'
+    compile 'com.mchange:c3p0:0.9.5'
+    compile "org.apache.commons:commons-dbcp2:2.0.1"
+    compile "org.apache.hadoop:hadoop-client:2.6.0"
+            
+    testCompile 'junit:junit:4.11'
+    testCompile 'org.scalatest:scalatest_2.10:2.1.7'
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.2.1'
+}

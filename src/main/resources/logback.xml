@@ -1,0 +1,39 @@
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- encoders are assigned the type
+             ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- See also http://logback.qos.ch/manual/appenders.html#RollingFileAppender -->
+    <appender name="defaultFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>cloudfeeds-ballista/cloudfeeds-ballista.log</File>
+
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-4r [%t] %-5p %c - %m%n</pattern>
+        </encoder>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- Keep 30 days of compressed history. -->
+            <maxHistory>30</maxHistory>
+
+            <!-- Daily rollover with gzip compression. -->
+            <FileNamePattern>cloudfeeds-ballista/cloudfeeds-ballista.%d{yyyy-MM-dd}.log.gz</FileNamePattern>
+        </rollingPolicy>
+    </appender>
+
+    <!--c3p0 logging-->
+    <logger name="com.mchange" level="INFO" /> 
+    
+    <!--jetting logging-->
+    <logger name="org.eclipse.jetty" level="INFO" />
+
+    <logger name="org.postgresql" level="DEBUG" />
+    
+    <root level="DEBUG">
+        <appender-ref ref="defaultFile" />
+        <appender-ref ref="STDOUT" />
+    </root>
+</configuration>
