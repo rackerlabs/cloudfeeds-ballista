@@ -17,7 +17,7 @@ gradle clean build
 
 ## Configuration
 
-The Cloud Feeds Preferences Service uses the following configuration files:
+The Cloud Feeds Ballista app uses the following configuration files:
 
 ### cloudfeeds-ballista.conf
 This file configures the cloudfeeds-ballista.conf app itself. 
