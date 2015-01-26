@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory
 
 object DefaultExportSvc extends ExportSvc {
 
+  val DATE_FORMAT: String = "yyyy-MM-dd"
   val logger = LoggerFactory.getLogger(getClass)
   
   override val dataExport = new PGDataExport

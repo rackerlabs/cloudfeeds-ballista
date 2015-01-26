@@ -4,8 +4,6 @@ import javax.sql.DataSource
 
 trait ExportSvc {
 
-  val DATE_FORMAT: String = "yyyy-MM-dd"
-
   def dataExport: DataExport
   def fsClient: FSClient
 
