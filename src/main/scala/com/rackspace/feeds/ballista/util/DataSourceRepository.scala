@@ -39,7 +39,8 @@ object DataSourceRepository {
       case(key, value) => key -> new DataSourceRepository().getDataSource(value)
     }
   }
-    
+ 
+  //factory method to get datasource's based on dbName
   def apply(dbName: String) = {
     dataSourceMap(dbName)
   }

@@ -15,6 +15,13 @@ To build this component, we require:
 gradle clean build
 ```
 
+## How to run the App
+Run the build to create an installable app. Run the following command.
+
+```
+java -Dconfig.file=/<file path>/cloudfeeds-ballista.conf -jar build/libs/cloudfeeds-ballista-<version>.jar
+```
+
 ## Configuration
 
 The Cloud Feeds Ballista app uses the following configuration files:

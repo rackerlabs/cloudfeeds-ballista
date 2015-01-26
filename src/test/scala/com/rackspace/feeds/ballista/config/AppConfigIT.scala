@@ -13,16 +13,5 @@ class AppConfigIT extends FunSuite {
     assert(AppConfig.log.configFile == "logback-test.xml", "Property value for appConfig.log.configFile is not retreived from test conf file")
   }
 
-  test("Should throw RuntimeException because of invalid configuration(duplicate dbName)") {
-    
-    try {
-      AppConfig.validate()
-      
-      fail() //This will trigger failure
-    } catch {
-      case e: Exception => logger.info(e.getMessage)
-    }
-  }
-  
 }
 

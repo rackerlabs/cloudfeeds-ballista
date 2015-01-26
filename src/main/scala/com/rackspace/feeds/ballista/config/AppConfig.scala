@@ -27,35 +27,32 @@ object AppConfig {
     classpathConfig
   }
 
-  def validate() = {
-    val dbConfigList = config.getConfigList("appConfig.export.from.dbs").asScala
-
-    val listOfDBNames = dbConfigList.map(_.getString("dbName")).toList
-    val duplicateDBNames = listOfDBNames.diff(listOfDBNames.distinct)
-
-    if (duplicateDBNames.size > 0) {
-      throw new RuntimeException("Invalid db's configuration. Duplicate db names found: " + duplicateDBNames.mkString(", "))
-    }
-
-  }
-
   object export {
+
+    val datacenter = config.getString("appConfig.datacenter")
+
     object from {
       object dbs {
 
-        private val dbConfigList = config.getConfigList("appConfig.export.from.dbs").asScala
+        val dbsConfigObject = config.getObject("appConfig.export.from.dbs")
+        val dbsConfig = config.getConfig("appConfig.export.from.dbs")
 
-        val dbConfigMap = dbConfigList.map(dbConfig =>
-          dbConfig.getString("dbName") -> Map(
-            dbName -> dbConfig.getString("dbName"),
-            driverClass -> dbConfig.getString("driverClass"),
-            jdbcUrl -> dbConfig.getString("jdbcUrl"),
-            user -> dbConfig.getString("user"),
-            password -> dbConfig.getString("password")
-          )).toMap
-
+        /**
+         * Map[dbName, Map[dbProp, propValue]]
+         */
+        val dbConfigMap = dbsConfigObject.keySet().asScala.map(db => {
+          db -> Map(dbName              -> db,
+                    driverClass         -> dbsConfig.getString(s"$db.driverClass"),
+                    jdbcUrl             -> dbsConfig.getString(s"$db.jdbcUrl"),
+                    user                -> dbsConfig.getString(s"$db.user"),
+                    password            -> dbsConfig.getString(s"$db.password"),
+                    outputFileLocation  -> dbsConfig.getString(s"$db.outputFileLocation"),
+                    fileNamePrefix      -> dbsConfig.getString(s"$db.fileNamePrefix"),
+                    copyQuery           -> dbsConfig.getString(s"$db.copyQuery")
+          )
+        }).toMap
+        
       }
-
     }
 
     object to {
