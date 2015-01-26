@@ -19,7 +19,7 @@ object DefaultExportSvc extends ExportSvc {
   def export(dbName: String) = {
 
     val dataSource = DataSourceRepository(dbName)
-    val query = dbConfigMap(dbName)(DBProps.copyQuery)
+    val query = dbConfigMap(dbName)(DBProps.query)
     val outputFilePath = getOutputFilePath(dbName, DateTime.now)
     
     logger.info(s"Exporting data from db:[$dbName] to HDFS file:[$outputFilePath]")

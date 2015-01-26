@@ -48,7 +48,7 @@ object AppConfig {
                     password            -> dbsConfig.getString(s"$db.password"),
                     outputFileLocation  -> dbsConfig.getString(s"$db.outputFileLocation"),
                     fileNamePrefix      -> dbsConfig.getString(s"$db.fileNamePrefix"),
-                    copyQuery           -> dbsConfig.getString(s"$db.copyQuery")
+                    query           -> dbsConfig.getString(s"$db.query")
           )
         }).toMap
         
