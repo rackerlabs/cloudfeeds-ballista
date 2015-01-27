@@ -40,8 +40,7 @@ object DataSourceRepository {
     }
   }
  
-  //factory method to get datasource's based on dbName
-  def apply(dbName: String) = {
+  def getDataSource(dbName: String) = {
     dataSourceMap(dbName)
   }
 

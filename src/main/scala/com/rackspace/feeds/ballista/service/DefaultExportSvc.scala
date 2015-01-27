@@ -8,23 +8,23 @@ import org.joda.time.format.DateTimeFormat
 import org.slf4j.LoggerFactory
 
 
-object DefaultExportSvc extends ExportSvc {
+class DefaultExportSvc(dbName: String) extends ExportSvc {
 
   val DATE_FORMAT: String = "yyyy-MM-dd"
   val logger = LoggerFactory.getLogger(getClass)
   
   override val dataExport = new PGDataExport
   override val fsClient = new HDFSClient
+  override lazy val dataSource = DataSourceRepository.getDataSource(dbName)
   
-  def export(dbName: String) = {
+  def export() = {
 
-    val dataSource = DataSourceRepository(dbName)
     val query = dbConfigMap(dbName)(DBProps.query)
-    val outputFilePath = getOutputFilePath(dbName, DateTime.now)
+    val outputFilePath = getOutputFilePath(DateTime.now)
     
     logger.info(s"Exporting data from db:[$dbName] to HDFS file:[$outputFilePath]")
     
-    val totalRecords = super.export(dataSource, query, outputFilePath, overwriteFile = true)
+    val totalRecords = super.export(query, outputFilePath, overwriteFile = true)
     
     logger.info(s"Exported [$totalRecords] records from db:[$dbName] to HDFS file:[$outputFilePath]")
   }
@@ -33,10 +33,9 @@ object DefaultExportSvc extends ExportSvc {
    * Generates the complete file path along with file name to be written
    * to HDFS. $outputFileLocation/${fileNamePrefix}_$dateTimeStr.txt
    *
-   * @param dbName
    * @return
    */
-  private def getOutputFilePath(dbName: String, dateTime: DateTime) = {
+  private def getOutputFilePath(dateTime: DateTime) = {
 
     val outputFileLocation = dbConfigMap(dbName)(DBProps.outputFileLocation).replaceFirst("/$", "")
     val fileNamePrefix = dbConfigMap(dbName)(DBProps.fileNamePrefix)

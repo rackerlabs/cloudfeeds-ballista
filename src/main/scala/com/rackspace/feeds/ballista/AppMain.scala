@@ -8,7 +8,7 @@ object AppMain {
   def main(args: Array[String]) {
 
     AppConfig.export.from.dbs.dbConfigMap.keySet.foreach(
-      DefaultExportSvc.export
+      new DefaultExportSvc(_).export()
     )
 
   }
