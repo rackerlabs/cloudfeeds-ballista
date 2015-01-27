@@ -15,7 +15,7 @@ class DefaultExportSvc(dbName: String) extends ExportSvc {
   
   override val dataExport = new PGDataExport
   override val fsClient = new HDFSClient
-  override lazy val dataSource = DataSourceRepository.getDataSource(dbName)
+  lazy val dataSource = DataSourceRepository.getDataSource(dbName)
   
   def export() = {
 
@@ -24,7 +24,7 @@ class DefaultExportSvc(dbName: String) extends ExportSvc {
     
     logger.info(s"Exporting data from db:[$dbName] to HDFS file:[$outputFilePath]")
     
-    val totalRecords = super.export(query, outputFilePath, overwriteFile = true)
+    val totalRecords = super.export(dataSource, query, outputFilePath, overwriteFile = true)
     
     logger.info(s"Exported [$totalRecords] records from db:[$dbName] to HDFS file:[$outputFilePath]")
   }
