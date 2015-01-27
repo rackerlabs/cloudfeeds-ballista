@@ -22,6 +22,17 @@ Run the build to create an installable app. Run the following command.
 java -Dconfig.file=/<file path>/cloudfeeds-ballista.conf -jar build/libs/cloudfeeds-ballista-<version>.jar
 ```
 
+## Command line options
+
+  -d <value> | --runDate <value>
+         runDate is a date in the format yyyy-MM-dd. Data belonging to this date will be exported         
+  -n <value> | --dbNames <value>
+         dbNames is comma separated list of database names to be exported         
+  -o <value> | --overwrite <value>
+         overwrite is a true/false flag. Set this to true to overwrite the output file if already present         
+  --help
+         Use this option to get detailed usage information of this utility.
+
 ## Configuration
 
 The Cloud Feeds Ballista app uses the following configuration files:

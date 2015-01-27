@@ -38,7 +38,7 @@ class DefaultExportSvcTest extends FunSuite with PrivateMethodTester with Mockit
 
     when(mockFSClient.getOutputStream(anyString(), anyBoolean())).thenReturn(mock[OutputStream])
     
-    defaultExportSvc.export()
+    defaultExportSvc.export(Map.empty, false)
 
     verify(mockDataExport).export(any[DataSource], anyString(), any[OutputStream])
   }
