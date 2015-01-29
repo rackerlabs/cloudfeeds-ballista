@@ -22,10 +22,11 @@ object CommandOptionsParser {
     opt[DateTime]('d', "runDate") action { (dateTime, callback) =>
         callback.copy(runDate = dateTime) 
       } validate { dateTime =>
-        if (dateTime.isBefore(DateTime.now.withTimeAtStartOfDay)) 
+        val todaysDate: DateTime = DateTime.now.withTimeAtStartOfDay
+        if (isValidRunDate(dateTime, todaysDate))
           success 
         else 
-          failure(s"Invalid runDate[$dateTime] specified. runDate should be less than today")
+          failure(s"Invalid runDate[$dateTime] specified. runDate should be less than today and within ${AppConfig.export.daysDataAvailable} days back")
       } text {
         """
           |runDate is a date in the format yyyy-MM-dd.
@@ -60,6 +61,11 @@ object CommandOptionsParser {
     }
   }
 
+
+  def isValidRunDate(dateTime: DateTime, referenceDate: DateTime): Boolean = {
+    dateTime.isBefore(referenceDate) &&
+      !dateTime.isBefore(referenceDate.minusDays(AppConfig.export.daysDataAvailable))
+  }
 
   def getCommandOptions(args: Array[String]): Option[CommandOptions] = {
     CommandOptionsParser.parser.parse(args, CommandOptions())

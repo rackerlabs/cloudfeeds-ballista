@@ -1,18 +1,20 @@
 package com.rackspace.feeds.ballista.config
 
 import org.joda.time.DateTime
-import org.joda.time.format.DateTimeFormat
+import org.joda.time.format.{DateTimeFormatter, DateTimeFormat}
 import org.scalatest.FunSuite
 
 class CommandOptionsParserTest extends FunSuite {
 
+  val dateTimePattern: DateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd")
+  
   test ("verify default options are being sent when no command line options are given") {
     val args = Array[String]()
 
     CommandOptionsParser.getCommandOptions(args) match {
       case Some(commandOptions) =>
         assert(commandOptions.runDate === DateTime.now.minusDays(1).withTimeAtStartOfDay(), "runDate option has the wrong default value")
-        assert(commandOptions.dbNames.size === 0, "dbNames option has the wrong default value")
+        assert(commandOptions.dbNames.size === AppConfig.export.from.dbs.dbConfigMap.keySet.size, "dbNames option has the wrong default value")
         assert(commandOptions.overwrite === false, "overwrite option has the wrong default value")
       case None => fail("Unable to parse command options")
     }
@@ -27,9 +29,36 @@ class CommandOptionsParserTest extends FunSuite {
       case None =>
     }
   }
+
+  val referenceDate = DateTime.now
+  List(DateTime.now,
+       DateTime.now.plusDays(1),
+       DateTime.now.minusDays(AppConfig.export.daysDataAvailable + 1)
+  ).foreach {dateTime =>
+    test (s"rundate should be invalid when rundate is $dateTime on $referenceDate") {
+
+      CommandOptionsParser.isValidRunDate(dateTime, referenceDate) match {
+        case true =>
+          fail(s"$dateTime as runDate should be invalid on $referenceDate")
+        case false =>
+      }
+    }
+  }
+  
+  (1 to AppConfig.export.daysDataAvailable).foreach{numberOfDays =>
+    test (s"rundate should be valid when rundate is $numberOfDays days back from $referenceDate") {
+
+      val runDate = referenceDate.minusDays(numberOfDays)
+      CommandOptionsParser.isValidRunDate(runDate, referenceDate) match {
+        case true =>
+        case false =>
+          fail(s"$runDate as runDate should be valid on $referenceDate")
+      }
+    }
+  }
   
   test ("parsing validation should fail for invalid rundate") {
-    val args = Array[String]("-d", DateTimeFormat.forPattern("yyyy-MM-dd").print(DateTime.now))
+    val args = Array[String]("-d", dateTimePattern.print(DateTime.now))
 
     CommandOptionsParser.getCommandOptions(args) match {
       case Some(commandOptions) =>
@@ -65,11 +94,11 @@ class CommandOptionsParserTest extends FunSuite {
   }
 
   test ("verify options sent from command line are being set correctly") {
-    val runDate: DateTime = DateTime.now.minusDays(10).withTimeAtStartOfDay()
+    val runDate: DateTime = DateTime.now.minusDays(2).withTimeAtStartOfDay()
     val dbNames: Set[String] = AppConfig.export.from.dbs.dbConfigMap.keySet
     val overwrite: Boolean = true
     
-    val runDateStr: String = DateTimeFormat.forPattern("yyyy-MM-dd").print(runDate)
+    val runDateStr: String = dateTimePattern.print(runDate)
     val dbNamesStr: String = dbNames.mkString(",")
     val overwriteStr: String = overwrite.toString
     
@@ -83,4 +112,5 @@ class CommandOptionsParserTest extends FunSuite {
       case None => fail("Unable to parse command options")
     }
   }
+
 }

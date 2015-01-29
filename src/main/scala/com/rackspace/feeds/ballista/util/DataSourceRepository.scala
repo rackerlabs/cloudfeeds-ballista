@@ -13,7 +13,7 @@ class DataSourceRepository private() {
   
   private def getDataSource(dbProps: Map[propertyName, String]) : DataSource = {
   
-    logger.debug("Creating datasource for " + dbProps(dbName))
+    logger.info("Creating datasource for " + dbProps(dbName))
     
     val prefsDBdataSource: BasicDataSource = new BasicDataSource
 

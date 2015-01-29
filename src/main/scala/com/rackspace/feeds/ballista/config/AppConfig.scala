@@ -30,6 +30,7 @@ object AppConfig {
   object export {
 
     val datacenter = config.getString("appConfig.datacenter")
+    val daysDataAvailable = config.getInt("appConfig.daysDataAvailable")
 
     object from {
       object dbs {
@@ -48,7 +49,7 @@ object AppConfig {
                     password            -> dbsConfig.getString(s"$db.password"),
                     outputFileLocation  -> dbsConfig.getString(s"$db.outputFileLocation"),
                     fileNamePrefix      -> dbsConfig.getString(s"$db.fileNamePrefix"),
-                    query           -> dbsConfig.getString(s"$db.query")
+                    queryClass          -> dbsConfig.getString(s"$db.queryClass")
           )
         }).toMap
         
