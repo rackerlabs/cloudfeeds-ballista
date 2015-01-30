@@ -10,7 +10,7 @@ import org.joda.time.DateTime
  */
 trait DBQuery {
   
-  val DELIMITER = "E'\\x01'"  //ctrl-A character
+  val PG_DELIMITER = "E'\\x01'"  //ctrl-A character
   
   /**
    * Generates a database query to extract data from the database.

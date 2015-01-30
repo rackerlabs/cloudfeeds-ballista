@@ -29,7 +29,7 @@ class EntriesDBQuery extends DBQuery {
        |         FROM $tableName
        |        limit 10)
        |   TO STDOUT
-       | WITH DELIMITER $DELIMITER
+       | WITH DELIMITER $PG_DELIMITER
      """.stripMargin
   }
 
