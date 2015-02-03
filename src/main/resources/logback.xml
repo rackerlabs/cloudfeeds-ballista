@@ -30,10 +30,9 @@
     <!--jetting logging-->
     <logger name="org.eclipse.jetty" level="INFO" />
 
-    <logger name="org.postgresql" level="DEBUG" />
-    
-    <root level="DEBUG">
+
+    <root level="INFO">
         <appender-ref ref="defaultFile" />
-        <appender-ref ref="STDOUT" />
+        <!--<appender-ref ref="STDOUT" />-->
     </root>
 </configuration>
