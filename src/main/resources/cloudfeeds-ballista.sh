@@ -27,7 +27,7 @@ RUN_OPTS=""
 # default java options
 JAVA_OPTS="-Dconfig.file=${CONFIG_FILE} -Dlogback.configurationFile=${LOG_CONFIG_FILE}"
 # home directory for the service
-EXEC_JAR="../lib/${NAME}.jar"
+EXEC_JAR="$(dirname $0)/../lib/${NAME}.jar"
 
 # Override the defaults via /etc/sysconfig/${NAME}
 if [ -f "/etc/sysconfig/${NAME}" ]; then
