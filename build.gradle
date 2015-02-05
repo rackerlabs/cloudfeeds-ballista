@@ -17,7 +17,6 @@ repositories {
 }
 
 group = 'com.rackspace.feeds.ballista'
-version = '1.0.0-SNAPSHOT'
 sourceCompatibility = 1.7
 
 ext.app_name = 'cloudfeeds-ballista'
