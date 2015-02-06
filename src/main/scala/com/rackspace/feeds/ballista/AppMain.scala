@@ -1,7 +1,6 @@
 package com.rackspace.feeds.ballista
 
-import com.rackspace.feeds.ballista.config.{CommandOptionsParser, CommandOptions, AppConfig}
-import com.rackspace.feeds.ballista.service.DefaultExportSvc
+import com.rackspace.feeds.ballista.config.CommandOptionsParser
 import org.slf4j.LoggerFactory
 
 class AppMain {
@@ -12,21 +11,12 @@ class AppMain {
 
     CommandOptionsParser.getCommandOptions(args) match {
       case Some(commandOptions) =>
-        doProcess(commandOptions)
+        new CommandProcessor().doProcess(commandOptions)
       case None =>
         println("Invalid command options. For help try with option --help")
     }
   }
-  
-  def doProcess(commandOptions: CommandOptions): Unit = {
-    logger.info(s"Process is being run with these options $commandOptions")
 
-    val queryParams: Map[String, Any] = Map("runDate" -> commandOptions.runDate)
-    
-    commandOptions.dbNames.foreach(
-      new DefaultExportSvc(_).export(queryParams, commandOptions.overwrite)
-    )
-  }
 
 }
 

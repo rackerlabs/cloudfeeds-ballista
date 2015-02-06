@@ -19,7 +19,7 @@ class DefaultExportSvc(dbName: String) extends ExportSvc {
   override val fsClient = new HDFSClient
   lazy val dataSource = DataSourceRepository.getDataSource(dbName)
   
-  def export(queryParams: Map[String, Any], overwriteFile: Boolean) = {
+  def export(queryParams: Map[String, Any], overwriteFile: Boolean): Long = {
 
     val outputFilePath = getOutputFilePath(queryParams("runDate").asInstanceOf[DateTime])
     val query = getQuery(queryParams)
@@ -30,6 +30,8 @@ class DefaultExportSvc(dbName: String) extends ExportSvc {
     val totalRecords = super.export(dataSource, query, outputFilePath, overwriteFile)
     
     logger.info(s"Exported [$totalRecords] records from db:[$dbName] to HDFS file:[$outputFilePath]")
+    
+    totalRecords
   }
 
   
@@ -70,7 +72,7 @@ class DefaultExportSvc(dbName: String) extends ExportSvc {
     val fileNamePrefix = dbConfigMap(dbName)(DBProps.fileNamePrefix)
     val dateTimeStr = DateTimeFormat.forPattern(DATE_FORMAT).print(dateTime)
 
-    s"$outputFileLocation/${fileNamePrefix}_${dbName}_$dateTimeStr.txt".toLowerCase
+    s"$outputFileLocation/$dateTimeStr/${fileNamePrefix}_${dbName}_$dateTimeStr.txt".toLowerCase
   }
   
 }
