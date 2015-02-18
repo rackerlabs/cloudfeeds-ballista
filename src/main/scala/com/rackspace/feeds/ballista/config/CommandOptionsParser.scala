@@ -5,8 +5,7 @@ import org.joda.time.format.DateTimeFormat
 import scopt.Read
 
 case class CommandOptions(runDate: DateTime = DateTime.now.minusDays(1).withTimeAtStartOfDay(),
-                          dbNames: Set[String] = AppConfig.export.from.dbs.dbConfigMap.keySet,
-                          overwrite: Boolean = false)
+                          dbNames: Set[String] = AppConfig.export.from.dbs.dbConfigMap.keySet)
 
 object CommandOptionsParser {
 
@@ -49,14 +48,6 @@ object CommandOptionsParser {
           |Available dbNames for this configuration: ${dbNamesSet.mkString(",")}
         """.stripMargin.replaceAll("\n", " ")
       }
-    opt[Boolean]('o', "overwrite") action { (x, c) =>
-        c.copy(overwrite = x) 
-      } text {
-        """
-          |overwrite is a true/false flag.
-          |Set this to true to overwrite the output file if already present
-        """.stripMargin.replaceAll("\n", " ")
-      } 
     help("help") text {
       """
         |Use this option to get detailed usage information of this utility.

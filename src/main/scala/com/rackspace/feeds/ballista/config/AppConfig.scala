@@ -31,7 +31,9 @@ object AppConfig {
 
     val datacenter = config.getString("appConfig.datacenter")
     val daysDataAvailable = config.getInt("appConfig.daysDataAvailable")
-
+    val tempOutputDir = config.getString("appConfig.tempOutputDir").replaceFirst("/$", "")
+    val maxRowLimit = config.getString("appConfig.maxRowLimit")
+    
     object from {
       object dbs {
 
@@ -64,6 +66,16 @@ object AppConfig {
         val coreSitePath = exportToHDFS.getString("coreSitePath")
         val hdfsSitePath = exportToHDFS.getString("hdfsSitePath")
 
+        object scp {
+          private val exportToHDFSScp = exportToHDFS.getConfig("scp")
+
+          val user = exportToHDFSScp.getString("user")
+          val host = exportToHDFSScp.getString("host")
+          val port = exportToHDFSScp.getInt("port")
+          val password = exportToHDFSScp.getString("password")
+          val privateKeyFilePath = exportToHDFSScp.getString("privateKeyFilePath")
+          val privateKeyPassPhrase = exportToHDFSScp.getString("privateKeyPassPhrase")
+        }
       }
     }
 

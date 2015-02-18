@@ -7,10 +7,10 @@ trait ExportSvc {
   def dataExport: DataExport
   def fsClient: FSClient
 
-  def export(dataSource: DataSource, query: String, outputFilePath: String, overwriteFile: Boolean ): Long = {
+  def export(dataSource: DataSource, query: String, outputFilePath: String): Long = {
 
-    val outputStream = fsClient.getOutputStream(outputFilePath, overwriteFile)
-    
+    val outputStream = fsClient.getOutputStream(outputFilePath)
+
     dataExport.export(dataSource, query, outputStream)
   }
 }

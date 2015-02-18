@@ -6,11 +6,11 @@ import org.joda.time.DateTime
 
 class PreferencesDBQuery extends DBQuery {
 
-  override def fetch(runDate: DateTime, datacenter: String, dataSource: DataSource): String = {
+  override def fetch(runDate: DateTime, datacenter: String, dataSource: DataSource, maxRowLimit: String): String = {
     s"""
        | COPY (SELECT *
        |         FROM preferences
-       |        limit 10)
+       |        limit $maxRowLimit)
        |   TO STDOUT 
        | WITH DELIMITER ','
      """.stripMargin

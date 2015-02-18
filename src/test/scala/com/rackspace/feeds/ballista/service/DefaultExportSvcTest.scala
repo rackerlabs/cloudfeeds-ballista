@@ -28,7 +28,7 @@ class DefaultExportSvcTest extends FunSuite with PrivateMethodTester with Mockit
   
   test("verify export method of DataExport is being called") {
     val mockDataExport = mock[PGDataExport]
-    val mockFSClient = mock[HDFSClient]
+    val mockFSClient = mock[GZFSClient]
   
     val defaultExportSvc = new DefaultExportSvc("newrelic") {
       override val dataExport = mockDataExport
@@ -36,11 +36,23 @@ class DefaultExportSvcTest extends FunSuite with PrivateMethodTester with Mockit
       override lazy val dataSource = mock[DataSource]
     }
 
-    when(mockFSClient.getOutputStream(anyString(), anyBoolean())).thenReturn(mock[OutputStream])
+    when(mockFSClient.getOutputStream(anyString())).thenReturn(mock[OutputStream])
     
-    defaultExportSvc.export(Map.empty, false)
+    defaultExportSvc.export(Map.empty)
 
     verify(mockDataExport).export(any[DataSource], anyString(), any[OutputStream])
   }
   
+  test("verify temp output file path based on $remoteFilePath and $tempDir locations") {
+    val defaultExportSvc = new DefaultExportSvc("newrelic")
+    
+    val getTempOutputFilePath = PrivateMethod[String]('getTempOutputFilePath)
+
+    val tempOutputFilePath = defaultExportSvc invokePrivate getTempOutputFilePath("/etl/entries/ord_newrelic1_2015-02-13.gz", "/tmp")
+    assert(tempOutputFilePath == "/tmp/ord_newrelic1_2015-02-13.gz", "Temp output file path incorrect")
+
+    val tempOutputFilePath1 = defaultExportSvc invokePrivate getTempOutputFilePath("/etl/entries/ord_newrelic1_2015-02-13.gz", "")
+    assert(tempOutputFilePath1 == "ord_newrelic1_2015-02-13.gz", "Temp output file path incorrect")
+
+  }
 }

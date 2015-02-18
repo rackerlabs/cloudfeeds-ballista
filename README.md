@@ -29,8 +29,6 @@ java -Dconfig.file="/<file path>/cloudfeeds-ballista.conf" -Dlogback.configurati
          runDate is a date in the format yyyy-MM-dd. Data belonging to this date will be exported. Default value is yesterday.           
   -n <value> | --dbNames <value>
          dbNames is comma separated list of database names to be exported. Default value is all the databases configured.           
-  -o <value> | --overwrite <value>
-         overwrite is a true/false flag. Set this to true to overwrite the output file if already present. Default value is false.           
   --help
          Use this option to get detailed usage information of this utility.
 

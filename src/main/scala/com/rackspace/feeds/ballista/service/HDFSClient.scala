@@ -1,6 +1,6 @@
 package com.rackspace.feeds.ballista.service
 
-import java.io.{FileOutputStream, File, OutputStream}
+import java.io.{File, OutputStream}
 
 import com.rackspace.feeds.ballista.config.AppConfig
 import org.apache.hadoop.conf.Configuration
@@ -15,10 +15,9 @@ class HDFSClient extends FSClient {
   private val fileSystem = FileSystem.get(conf)
 
 
-  override def getOutputStream(filePath: String, overwrite: Boolean): OutputStream = {
+  override def getOutputStream(filePath: String): OutputStream = {
     val file = new File(filePath)
 
-    fileSystem.create(new Path(filePath), overwrite)
-//    new FileOutputStream(file)
+    fileSystem.create(new Path(filePath))
   }
 }

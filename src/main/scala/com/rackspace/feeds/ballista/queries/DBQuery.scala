@@ -20,5 +20,5 @@ trait DBQuery {
    * @param dataSource
    * @return a database query to extract data
    */
-  def fetch(runDate: DateTime, datacenter: String, dataSource: DataSource): String
+  def fetch(runDate: DateTime, datacenter: String, dataSource: DataSource, maxRowLimit: String): String
 }
