@@ -44,14 +44,15 @@ object AppConfig {
          * Map[dbName, Map[dbProp, propValue]]
          */
         val dbConfigMap = dbsConfigObject.keySet().asScala.map(db => {
-          db -> Map(dbName              -> db,
-                    driverClass         -> dbsConfig.getString(s"$db.driverClass"),
-                    jdbcUrl             -> dbsConfig.getString(s"$db.jdbcUrl"),
-                    user                -> dbsConfig.getString(s"$db.user"),
-                    password            -> dbsConfig.getString(s"$db.password"),
-                    outputFileLocation  -> dbsConfig.getString(s"$db.outputFileLocation"),
-                    fileNamePrefix      -> dbsConfig.getString(s"$db.fileNamePrefix"),
-                    queryClass          -> dbsConfig.getString(s"$db.queryClass")
+          db -> Map(dbName                  -> db,
+                    driverClass             -> dbsConfig.getString(s"$db.driverClass"),
+                    jdbcUrl                 -> dbsConfig.getString(s"$db.jdbcUrl"),
+                    user                    -> dbsConfig.getString(s"$db.user"),
+                    password                -> dbsConfig.getString(s"$db.password"),
+                    outputFileLocation      -> dbsConfig.getString(s"$db.outputFileLocation").replaceFirst("/$", ""),
+                    fileNamePrefix          -> dbsConfig.getString(s"$db.fileNamePrefix"),
+                    queryClass              -> dbsConfig.getString(s"$db.queryClass"),
+                    isOutputFileDateDriven  -> dbsConfig.getString(s"$db.isOutputFileDateDriven")
           )
         }).toMap
         

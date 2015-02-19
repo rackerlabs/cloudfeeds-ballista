@@ -15,8 +15,7 @@ class SCPUtil {
   val logger = LoggerFactory.getLogger(getClass)
 
   /**
-   * Using $sessionInfo, scp's the file $localFilePath to $remoteFileLocation/$subDir location. 
-   * The file name remains the same.
+   * Using $sessionInfo, scp's the file $localFilePath to $remoteFileLocation/$subDir/$remoteFileName 
    *  
    * @param sessionInfo
    * @param localFilePath
@@ -24,6 +23,13 @@ class SCPUtil {
    */
   def scp(sessionInfo: SCPSessionInfo, localFilePath: String, remoteFileName: String, remoteFileLocation: String, subDir: String) = {
 
+    val remoteFilePath = if (StringUtils.isNotEmpty(subDir))
+      s"$remoteFileLocation/$subDir/$remoteFileName"
+    else 
+      s"$remoteFileLocation/$remoteFileName"
+    
+    logger.info(s"SCP start: local file [$localFilePath] to remote file [$remoteFilePath]")
+    
     var remoteOutputStream: OutputStream = null
     var remoteInputStream: InputStream = null
 
@@ -53,6 +59,7 @@ class SCPUtil {
       IOUtils.closeQuietly(remoteOutputStream)
       IOUtils.closeQuietly(remoteInputStream)
     }
+    logger.info(s"SCP end: local file [$localFilePath] to remote file [$remoteFilePath]")
   }
 
 
@@ -65,11 +72,10 @@ class SCPUtil {
      *  
      *  Jsch library internally parses this command into a String array. So be careful 
      *  to not include any extra spaces inbetween.
+     *  
+     *  Adding r flag if directory creation is involved
      */
-    val recursiveCopyFlag = if (StringUtils.isNotEmpty(subDir))
-      "r" //if directory creation is involved
-    else 
-      ""
+    val recursiveCopyFlag = if (StringUtils.isNotEmpty(subDir)) "r" else ""
     
     val command = s"scp -${recursiveCopyFlag}t $remoteFileLocation"
     val channel = session.openChannel("exec")

@@ -22,17 +22,18 @@ class DefaultExportSvc(dbName: String) extends ExportSvc {
   override val fsClient = new GZFSClient
   lazy val dataSource = DataSourceRepository.getDataSource(dbName)
 
+  val isOutputFileDateDriven = dbConfigMap(dbName)(DBProps.isOutputFileDateDriven).toBoolean
+  
   val scpUtil = new SCPUtil
   private val sessionInfo = new SCPSessionInfo(user, password, host, port, privateKeyFilePath, privateKeyPassPhrase)
   
   def export(queryParams: Map[String, Any]): Long = {
 
     val runDate: DateTime = queryParams("runDate").asInstanceOf[DateTime]
-    val remoteOutputFilePath = getRemoteOutputFilePath(runDate)
     val query = getQuery(queryParams)
     logger.debug(s"query: $query")
 
-    val tempOutputFilePath = getTempOutputFilePath(remoteOutputFilePath, AppConfig.export.tempOutputDir)
+    val tempOutputFilePath = getTempOutputFilePath(runDate, AppConfig.export.tempOutputDir)
     
     logger.info(s"Exporting data from db:[$dbName] to temporary file:[$tempOutputFilePath]")
     
@@ -40,19 +41,23 @@ class DefaultExportSvc(dbName: String) extends ExportSvc {
     
     logger.info(s"Exported [$totalRecords] records from db:[$dbName] to temporary file:[$tempOutputFilePath]")
 
-    
-    scpFile(tempOutputFilePath, remoteOutputFilePath, DateTimeFormat.forPattern(DATE_FORMAT).print(runDate))
+    scpFile(tempOutputFilePath, runDate)
     
     totalRecords
   }
 
-  def scpFile(tempOutputFilePath: String, remoteOutputFilePath: String, subDir: String) {
-    val remoteOutputFileLocation = remoteOutputFilePath.substring(0, remoteOutputFilePath.lastIndexOf("/"))
-    val remoteOutputFileName = remoteOutputFilePath.substring(remoteOutputFilePath.lastIndexOf("/") + 1)
-    
-    logger.info(s"SCP start: local file [$tempOutputFilePath] to remote file [$remoteOutputFileLocation/$subDir]")
+  /**
+   * SCP the local file $tempOutputFilePath to <configured remote output file location>/$runDate
+   *  
+   * @param tempOutputFilePath
+   * @param runDate
+   */
+  def scpFile(tempOutputFilePath: String, runDate: DateTime) {
+    val remoteOutputFileName = getRemoteFileName(runDate)
+    val remoteOutputFileLocation = dbConfigMap(dbName)(DBProps.outputFileLocation)
+    val subDir = if (isOutputFileDateDriven) DateTimeFormat.forPattern(DATE_FORMAT).print(runDate) else ""
+
     scpUtil.scp(sessionInfo, tempOutputFilePath, remoteOutputFileName, remoteOutputFileLocation, subDir)
-    logger.info(s"SCP completed successfully: [$tempOutputFilePath] to remote file [$remoteOutputFileLocation/$subDir]")
   }
 
   private def getQuery(queryParams: Map[String, Any]) = {
@@ -81,32 +86,15 @@ class DefaultExportSvc(dbName: String) extends ExportSvc {
   }
   
   /**
-   * Generates the complete file path along with file name to be written
-   * to HDFS. $outputFileLocation/${fileNamePrefix}_$dateTimeStr.txt
+   * Generates the file name specific to the dbName, current date etc
    *
-   * @return
-   */
-  private def getRemoteOutputFilePath(dateTime: DateTime) = {
-
-    val outputFileLocation = dbConfigMap(dbName)(DBProps.outputFileLocation).replaceFirst("/$", "")
-    val fileNamePrefix = dbConfigMap(dbName)(DBProps.fileNamePrefix)
-    val dateTimeStr = DateTimeFormat.forPattern(DATE_FORMAT).print(dateTime)
-
-    s"$outputFileLocation/${fileNamePrefix}_${dbName}_$dateTimeStr.gz".toLowerCase
-  }
-
-  /**
-   * Fetches the file name from the given $remoteOutputFilePath and returns a file path
-   * for the temporary gzip file to be created in in $tempDir location
-   *
-   * @param remoteOutputFilePath
+   * @param runDate
    * @param tempDir
-   * @return
+   * @return the file name specific to the dbName, current date
    */
-  private def getTempOutputFilePath(remoteOutputFilePath: String, tempDir: String): String = {
-    
-    //Get the file name and change the file extension to .gz
-    val tempFileName = remoteOutputFilePath.substring(remoteOutputFilePath.lastIndexOf("/") + 1)
+  private def getTempOutputFilePath(runDate: DateTime, tempDir: String): String = {
+
+    val tempFileName: String = getRemoteFileName(runDate)
 
     val tempOutputFilePath = if (tempDir.length > 0)
       s"$tempDir/$tempFileName"
@@ -118,5 +106,16 @@ class DefaultExportSvc(dbName: String) extends ExportSvc {
       new File(tempOutputFilePath.substring(0, tempOutputFilePath.lastIndexOf("/"))).mkdirs()
     
     tempOutputFilePath
+    
+  }
+
+  private def getRemoteFileName(runDate: DateTime): String = {
+    val fileNamePrefix = dbConfigMap(dbName)(DBProps.fileNamePrefix)
+    val runDateStr = DateTimeFormat.forPattern(DATE_FORMAT).print(runDate)
+
+    if (isOutputFileDateDriven)
+      s"${fileNamePrefix}_${dbName}_$runDateStr.gz"
+    else
+      s"${fileNamePrefix}_${dbName}.gz"
   }
 }
