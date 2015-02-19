@@ -96,7 +96,16 @@ class CommandProcessor {
   def getWriter(filePath: String) = {
     new PrintWriter(fsClient.getOutputStream(filePath))
   }
-  
+
+  /**
+   * SCP file present in $localFilePath to $remoteFilePath. If the remote file needs be placed in a 
+   * new remote directory at the end of the current path in $remoteFilePath, $newSubDir value will
+   * be used to create that new directory.
+   *  
+   * @param localFilePath
+   * @param remoteFilePath
+   * @param newSubDir
+   */
   def scpFile(localFilePath: String, remoteFilePath: String, newSubDir: String) = {
     val remoteOutputFileLocation = remoteFilePath.substring(0, remoteFilePath.lastIndexOf("/"))
     val remoteOutputFileName = remoteFilePath.substring(remoteFilePath.lastIndexOf("/") + 1)

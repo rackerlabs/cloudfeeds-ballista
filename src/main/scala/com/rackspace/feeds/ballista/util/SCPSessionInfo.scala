@@ -2,13 +2,14 @@ package com.rackspace.feeds.ballista.util
 
 import java.util.Properties
 
-import com.jcraft.jsch.{UserInfo, Session, JSch}
+import com.jcraft.jsch.{JSch, Session, UserInfo}
+import org.apache.commons.lang.StringUtils
 
 
 class SCPUserInfo(val password: String) extends UserInfo {
   override def getPassphrase: String = null
 
-  override def promptPassword(message: String): Boolean = password != null
+  override def promptPassword(message: String): Boolean = StringUtils.isNotEmpty(password)
 
   override def promptYesNo(message: String): Boolean = false
 
@@ -31,7 +32,7 @@ class SCPSessionInfo(userName: String, password: String, host: String, port: Int
   def createSession() = {
 
     val jsch: JSch = new JSch
-    if (pKeyFilePath != null && pKeyFilePath.length > 0)
+    if (StringUtils.isNotEmpty(pKeyFilePath))
       jsch.addIdentity(pKeyFilePath, pKeyPassPhrase)
 
     val session: Session = jsch.getSession(userName, host, port)

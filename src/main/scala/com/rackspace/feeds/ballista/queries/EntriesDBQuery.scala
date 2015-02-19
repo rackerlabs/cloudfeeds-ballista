@@ -24,11 +24,17 @@ class EntriesDBQuery extends DBQuery {
       throw new RuntimeException("Partitioned table[$tableName] does not exist")
     }
     s"""
-       | COPY (SELECT id, entryid, creationdate, datelastupdated, 
+       | COPY (SELECT id, 
+       |              entryid, 
+       |              creationdate, 
+       |              datelastupdated, 
        |              regexp_replace(entrybody, E'[\\n\\r]+', ' ', 'g') as entrybody,
        |              array_to_string( categories, '|' ) as categories,
-       |              eventtype, tenantid, '$datacenter' as dc,
-       |              feed, '$runDateStr' as date
+       |              eventtype, 
+       |              tenantid, 
+       |              '$datacenter' as region,
+       |              feed, 
+       |              '$runDateStr' as date
        |         FROM $tableName
        |        limit $maxRowLimit)
        |   TO STDOUT

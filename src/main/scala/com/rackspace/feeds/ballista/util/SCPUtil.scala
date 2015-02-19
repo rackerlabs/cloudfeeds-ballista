@@ -4,6 +4,7 @@ import java.io._
 
 import com.jcraft.jsch.{Channel, ChannelExec, Session}
 import org.apache.commons.io.IOUtils
+import org.apache.commons.lang.StringUtils
 import org.slf4j.LoggerFactory
 
 import scala.io.Source
@@ -65,8 +66,8 @@ class SCPUtil {
      *  Jsch library internally parses this command into a String array. So be careful 
      *  to not include any extra spaces inbetween.
      */
-    val recursiveCopyFlag = if (subDir != null && subDir.length > 0) 
-      "r" //if directory creating is invovled
+    val recursiveCopyFlag = if (StringUtils.isNotEmpty(subDir))
+      "r" //if directory creation is involved
     else 
       ""
     
@@ -132,7 +133,7 @@ class SCPUtil {
     val localFileSize = localFile.length()
 
     val streamCommand = new StringBuilder
-    if (subDir != null && subDir.length > 0)
+    if (StringUtils.isNotEmpty(subDir))
       streamCommand.append(s"D0755 0 $subDir\n")
     streamCommand.append(s"C0644 $localFileSize $remoteFileName\n")
 
