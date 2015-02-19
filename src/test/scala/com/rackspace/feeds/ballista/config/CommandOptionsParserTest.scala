@@ -15,7 +15,6 @@ class CommandOptionsParserTest extends FunSuite {
       case Some(commandOptions) =>
         assert(commandOptions.runDate === DateTime.now.minusDays(1).withTimeAtStartOfDay(), "runDate option has the wrong default value")
         assert(commandOptions.dbNames.size === AppConfig.export.from.dbs.dbConfigMap.keySet.size, "dbNames option has the wrong default value")
-        assert(commandOptions.overwrite === false, "overwrite option has the wrong default value")
       case None => fail("Unable to parse command options")
     }
   }
@@ -108,7 +107,6 @@ class CommandOptionsParserTest extends FunSuite {
       case Some(commandOptions) =>
         assert(commandOptions.runDate === runDate, "runDate option is not set to the correct value")
         assert(commandOptions.dbNames === dbNames, "dbNames option is not set to the correct value")
-        assert(commandOptions.overwrite === overwrite, "overwrite option is not set to the correct value")
       case None => fail("Unable to parse command options")
     }
   }

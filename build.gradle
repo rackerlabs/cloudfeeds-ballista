@@ -53,7 +53,8 @@ dependencies {
     compile "org.apache.hadoop:hadoop-client:2.6.0"
     compile "com.github.scopt:scopt_2.10:3.0.0"
     compile 'org.scala-lang:scala-reflect:2.10.4'
-    
+    compile 'com.jcraft:jsch:0.1.51'
+
     testCompile 'junit:junit:4.11'
     testCompile 'org.scalatest:scalatest_2.10:2.1.7'
     testCompile 'org.mockito:mockito-all:1.9.5'

@@ -5,29 +5,38 @@ import javax.sql.DataSource
 
 import com.rackspace.feeds.ballista.config.CommandOptionsParser
 import org.joda.time.DateTime
-import org.joda.time.format.DateTimeFormat
+import org.joda.time.format.{DateTimeFormatter, DateTimeFormat}
 import org.slf4j.LoggerFactory
 
 
 class EntriesDBQuery extends DBQuery {
 
+  val dateTimeFormatter: DateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd")
   val logger = LoggerFactory.getLogger(getClass)
   
-  override def fetch(runDate: DateTime, datacenter: String, dataSource: DataSource): String = {
+  override def fetch(runDate: DateTime, datacenter: String, dataSource: DataSource, maxRowLimit: String): String = {
     val tableName = getTableName(runDate, dataSource)
     
     logger.debug(s"Preparing query to extract data from partitioned entries table[$tableName] for runDate[$runDate]")
+    val runDateStr = dateTimeFormatter.print(runDate)
     
     if (!isTableExist(tableName, dataSource)) {
       throw new RuntimeException("Partitioned table[$tableName] does not exist")
     }
     s"""
-       | COPY (SELECT id, entryid, creationdate, datelastupdated, 
-       |              regexp_replace(entrybody, E'[\\n\\r]+', ' ', 'g')
-       |              feed, array_to_string( categories, '|' ) as categories, 
-       |              eventtype, tenantid, '$datacenter' as dc
+       | COPY (SELECT id, 
+       |              entryid, 
+       |              creationdate, 
+       |              datelastupdated, 
+       |              regexp_replace(entrybody, E'[\\n\\r]+', ' ', 'g') as entrybody,
+       |              array_to_string( categories, '|' ) as categories,
+       |              eventtype, 
+       |              tenantid, 
+       |              '$datacenter' as region,
+       |              feed, 
+       |              '$runDateStr' as date
        |         FROM $tableName
-       |        limit 10)
+       |        limit $maxRowLimit)
        |   TO STDOUT
        | WITH DELIMITER $PG_DELIMITER
      """.stripMargin
@@ -43,7 +52,7 @@ class EntriesDBQuery extends DBQuery {
    */
   private def getTableName(runDate: DateTime, dataSource: DataSource): String = {
 
-    val runDateStr = DateTimeFormat.forPattern("yyyy-MM-dd").print(runDate)
+    val runDateStr = dateTimeFormatter.print(runDate)
 
     var connection:Connection  = null
   
