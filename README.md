@@ -1,7 +1,7 @@
 cloudfeeds-ballista
 ==========================
 
-A command line utility to migrate data from RDBMS database to HDFS.
+A command line utility to migrate data from RDBMS databases to HDFS using SCP.
 
 
 ## How to Build
@@ -16,12 +16,22 @@ To build this component, we require:
 gradle clean build
 ```
 
+### Build an RPM
+```
+gradle clean buildRpm
+```
+
 ## How to run the App
-Run the build to create an installable app. Run the following command.
+Run a simple build to create an installable app. Run the following command.
 
 ```
 java -Dconfig.file="/<file path>/cloudfeeds-ballista.conf" -Dlogback.configurationFile="/<file path>/logback.xml"-jar build/libs/cloudfeeds-ballista-<version>.jar
 ```
+## How to run the App after installing the rpm
+Run the command to build an RPM. Install rpm. Create the necessary config files in /etc/cloudfeeds-ballista. Execute the below script   
+
+sh /usr/share/cloudfeeds-ballista/bin/cloudfeeds-ballista.sh
+
 
 ## Command line options
 
@@ -41,15 +51,6 @@ This file configures the cloudfeeds-ballista.conf app itself.
 
 By default, the cloudfeeds-ballista app will try to find this file from classpath. This can be overriden by specifying the Java System properties ```-Dconfig.file=<path_to_file>```.
 
-### core-site.xml
-This file has the hadoop configuration.
-
-By default, the cloudfeeds-ballista app will try to load this file from classpath. This can be overriden by editing the ```cloudfeeds-ballista.conf``` file above.
-
-### hdfs-site.xml
-This file has the HDFS configuration.
-
-By default, the cloudfeeds-ballista app will try to load this file from classpath. This can be overriden by editing the ```cloudfeeds-ballista.conf``` file above.
 
 ### logback.xml
 This file has the logging related configuration.
