@@ -28,10 +28,11 @@ Run a simple build to create an installable app. Run the following command.
 java -Dconfig.file="/<file path>/cloudfeeds-ballista.conf" -Dlogback.configurationFile="/<file path>/logback.xml"-jar build/libs/cloudfeeds-ballista-<version>.jar
 ```
 ## How to run the App after installing the rpm
-Run the command to build an RPM. Install rpm. Create the necessary config files in /etc/cloudfeeds-ballista. Execute the below script   
+Run the command to build an RPM. Install rpm. Execute the below script   
 
 sh /usr/share/cloudfeeds-ballista/bin/cloudfeeds-ballista.sh
 
+The app expects the configuration files to be present at /etc/cloudfeeds-ballista
 
 ## Command line options
 
@@ -47,12 +48,11 @@ sh /usr/share/cloudfeeds-ballista/bin/cloudfeeds-ballista.sh
 The Cloud Feeds Ballista app uses the following configuration files:
 
 ### cloudfeeds-ballista.conf
-This file configures the cloudfeeds-ballista.conf app itself. 
+This file configures the cloudfeeds-ballista.conf app itself. This sample [cloudfeeds-ballista.conf](https://github.com/rackerlabs/cloudfeeds-ballista/blob/master/src/main/resources/cloudfeeds-ballista.conf) file contains the necessary information to configure the app. 
 
-By default, the cloudfeeds-ballista app will try to find this file from classpath. This can be overriden by specifying the Java System properties ```-Dconfig.file=<path_to_file>```.
-
+The file can be specified when running the app by specifying the Java System properties ```-Dconfig.file=<path_to_file>```.
 
 ### logback.xml
 This file has the logging related configuration.
 
-By default, the cloudfeeds-ballista app will try to load this file from classpath. This can be overriden by editing the ```cloudfeeds-ballista.conf``` file above.
+The file can be specified when running the app by specifying the Java System properties ```-Dconfig.file=<logback.configurationFile>```.
