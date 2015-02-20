@@ -22,6 +22,8 @@ class CommandProcessor {
   val scpUtil = new SCPUtil
   val sessionInfo = new SCPSessionInfo(user, password, host, port, privateKeyFilePath, privateKeyPassPhrase)
   
+  val SUCCESS_FILE_NAME: String = "_SUCCESS"
+  
   def doProcess(commandOptions: CommandOptions): Unit = {
     logger.info(s"Process is being run with these options $commandOptions")
 
@@ -32,7 +34,10 @@ class CommandProcessor {
 
     val resultMap = commandOptions.dbNames.map( dbName => {
       val outputFileLocation = dbConfigMap(dbName)(DBProps.outputFileLocation).replaceFirst("/$", "")
-      mm.addBinding(outputFileLocation, dbName)
+      val isOutputFileDateDriven = dbConfigMap(dbName)(DBProps.isOutputFileDateDriven).toBoolean
+      
+      if (isOutputFileDateDriven)
+        mm.addBinding(outputFileLocation, dbName)
 
       dbName -> new DefaultExportSvc(dbName).export(queryParams)
     }).toMap
@@ -65,14 +70,12 @@ class CommandProcessor {
                         outputLocationMap: HashMap[String, Set[String]] with MultiMap[String, String],
                         runDate: DateTime): Unit = {
     
-    val dateTimeStr = DateTimeFormat.forPattern("yyyy-MM-dd").print(runDate)
+    val runDateStr = DateTimeFormat.forPattern("yyyy-MM-dd").print(runDate)
     
     outputLocationMap.foreach {
       case (outputFileLocation, dbNameSet) => {
         logger.info(s"Writing success file in $outputFileLocation for databases[${dbNameSet.mkString(",")}]")
         
-        val successFileName = s"$outputFileLocation/_SUCCESS"
-
         val localFilePath: String = java.io.File.createTempFile("temp", "_success").getAbsolutePath
         val writer: Writer = getWriter(localFilePath)
         
@@ -86,9 +89,10 @@ class CommandProcessor {
         } finally {
           writer.close()
         }
-        scpFile(localFilePath, successFileName, dateTimeStr)
+        logger.info(s"Completed writing success file $localFilePath")
 
-        logger.info(s"Completed writing success file $successFileName")
+        scpUtil.scp(sessionInfo, localFilePath, SUCCESS_FILE_NAME, outputFileLocation, runDateStr)
+
       }
     }
   }
@@ -97,20 +101,4 @@ class CommandProcessor {
     new PrintWriter(fsClient.getOutputStream(filePath))
   }
 
-  /**
-   * SCP file present in $localFilePath to $remoteFilePath. If the remote file needs be placed in a 
-   * new remote directory at the end of the current path in $remoteFilePath, $newSubDir value will
-   * be used to create that new directory.
-   *  
-   * @param localFilePath
-   * @param remoteFilePath
-   * @param newSubDir
-   */
-  def scpFile(localFilePath: String, remoteFilePath: String, newSubDir: String) = {
-    val remoteOutputFileLocation = remoteFilePath.substring(0, remoteFilePath.lastIndexOf("/"))
-    val remoteOutputFileName = remoteFilePath.substring(remoteFilePath.lastIndexOf("/") + 1)
-    
-    scpUtil.scp(sessionInfo, localFilePath, remoteOutputFileName, remoteOutputFileLocation, newSubDir)
-  }
-  
 }
