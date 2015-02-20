@@ -3,6 +3,18 @@ cloudfeeds-ballista
 
 A command line utility to migrate data from RDBMS databases to HDFS using SCP.
 
+The application can be configured to export data corresponding to multiple databases. For each 
+such database the application performs the following steps
+
+1.  Extracts yesterdays(by default; configurable with --runDate option) data from the database into a temporary
+    gZip file and places it under a temporary location (configurable using cloudfeeds-ballista.conf file)
+2.  Using SCP, transfers the gZip file to the remote HDFS server to a desired 
+    location(configurable using cloudfeeds-ballista.conf file)    
+3.  After successfully exporting data corresponding to all databases, creates _SUCCESS file and places it at each 
+    of the remote output locations. The _SUCCESS file contains number of records exported from the corresponding 
+    databases that are stored in the remote output location in the following format.   
+    ```<dbName1>=<number of records exported>```  
+    ```<dbName2>=<number of records exported>```
 
 ## How to Build
 To build this component, we require:
