@@ -64,9 +64,6 @@ object AppConfig {
 
         private val exportToHDFS = config.getConfig("appConfig.export.to.hdfs")
 
-        val coreSitePath = exportToHDFS.getString("coreSitePath")
-        val hdfsSitePath = exportToHDFS.getString("hdfsSitePath")
-
         object scp {
           private val exportToHDFSScp = exportToHDFS.getConfig("scp")
 
