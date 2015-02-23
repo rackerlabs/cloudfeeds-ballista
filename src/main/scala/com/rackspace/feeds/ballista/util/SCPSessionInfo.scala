@@ -3,7 +3,7 @@ package com.rackspace.feeds.ballista.util
 import java.util.Properties
 
 import com.jcraft.jsch.{JSch, Session, UserInfo}
-import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang3.StringUtils
 
 
 class SCPUserInfo(val password: String) extends UserInfo {
