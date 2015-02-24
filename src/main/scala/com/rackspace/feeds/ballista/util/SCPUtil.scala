@@ -4,7 +4,7 @@ import java.io._
 
 import com.jcraft.jsch.{Channel, ChannelExec, Session}
 import org.apache.commons.io.IOUtils
-import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 
 import scala.io.Source
