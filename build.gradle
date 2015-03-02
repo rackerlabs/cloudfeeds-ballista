@@ -85,6 +85,7 @@ ospackage {
     // copy config files
     from('src/main/resources') {
         into rpmProps.config_path
+        include 'cloudfeeds-ballista.conf'
         include 'logback.xml'
         user rpmProps.app_user
         permissionGroup rpmProps.app_group
