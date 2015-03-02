@@ -3,42 +3,60 @@ package com.rackspace.feeds.ballista.service
 import java.io.OutputStream
 import javax.sql.DataSource
 
+import com.rackspace.feeds.ballista.util.SCPUtil
+import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
+import org.junit.runner.RunWith
 import org.mockito.Matchers._
 import org.mockito.Mockito._
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{FunSuite, PrivateMethodTester}
 
+@RunWith(classOf[JUnitRunner])
 class DefaultExportSvcTest extends FunSuite with PrivateMethodTester with MockitoSugar {
 
   
-  test("constructed file path should be in format $outputFileLocation/${fileNamePrefix}_$dateTimeStr.txt") {
+  test("remote output file name should be ${fileNamePrefix}_${dbName}_$runDateStr.gz when isOutputFileDateDriven is set to true in conf file") {
 
     val defaultExportSvc = new DefaultExportSvc("newrelic")
-    val testDateStr = "2014-01-21"
-    val testDate = DateTimeFormat.forPattern(defaultExportSvc.DATE_FORMAT).parseDateTime(testDateStr);
+    val runDate: DateTime = DateTime.now.minusDays(1).withTimeAtStartOfDay()
+    val runDateStr = DateTimeFormat.forPattern("yyyy-MM-dd").print(runDate)
+
+    val getRemoteFileName = PrivateMethod[String]('getRemoteFileName)
+    val remoteFileName = defaultExportSvc invokePrivate getRemoteFileName(runDate)
     
-    val getOutputFilePath = PrivateMethod[String]('getOutputFilePath)
-    val outputFilePath = defaultExportSvc invokePrivate getOutputFilePath(testDate)
+    assert(remoteFileName == "ord_newrelic_" + runDateStr + ".gz", "output file path not accurate")
     
-    println(outputFilePath)
-    assert(outputFilePath == "/etl/entries/ord_newrelic_" + testDateStr + ".txt", "output file path not accurate")
-    
+  }
+
+  test("remote output file name should be ${fileNamePrefix}_${dbName}_$runDateStr.gz when isOutputFileDateDriven is set to false in conf file") {
+
+    val defaultExportSvc = new DefaultExportSvc("prefs")
+    val getRemoteFileName = PrivateMethod[String]('getRemoteFileName)
+    val remoteFileName = defaultExportSvc invokePrivate getRemoteFileName(DateTime.now.minusDays(1).withTimeAtStartOfDay())
+
+    assert(remoteFileName == "ord_prefs.gz", "output file path not accurate")
+
   }
   
   test("verify export method of DataExport is being called") {
     val mockDataExport = mock[PGDataExport]
     val mockFSClient = mock[GZFSClient]
-  
+
+    val queryParams: Map[String, DateTime] = Map("runDate" -> DateTime.now())
+
     val defaultExportSvc = new DefaultExportSvc("newrelic") {
       override val dataExport = mockDataExport
       override val fsClient = mockFSClient
+      override val scpUtil = mock[SCPUtil]
       override lazy val dataSource = mock[DataSource]
+      override def getQuery(queryParams: Map[String, Any]) = "select * from entries"
     }
-
-    when(mockFSClient.getOutputStream(anyString())).thenReturn(mock[OutputStream])
     
-    defaultExportSvc.export(Map.empty)
+    when(mockFSClient.getOutputStream(anyString())).thenReturn(mock[OutputStream])
+
+    defaultExportSvc.export(queryParams)
 
     verify(mockDataExport).export(any[DataSource], anyString(), any[OutputStream])
   }
@@ -48,11 +66,14 @@ class DefaultExportSvcTest extends FunSuite with PrivateMethodTester with Mockit
     
     val getTempOutputFilePath = PrivateMethod[String]('getTempOutputFilePath)
 
-    val tempOutputFilePath = defaultExportSvc invokePrivate getTempOutputFilePath("/etl/entries/ord_newrelic1_2015-02-13.gz", "/tmp")
-    assert(tempOutputFilePath == "/tmp/ord_newrelic1_2015-02-13.gz", "Temp output file path incorrect")
+    val runDate: DateTime = DateTime.now.minusDays(1).withTimeAtStartOfDay()
+    val runDateStr = DateTimeFormat.forPattern("yyyy-MM-dd").print(runDate)
+    
+    val tempOutputFilePath = defaultExportSvc invokePrivate getTempOutputFilePath(runDate, "/tmp")
+    assert(tempOutputFilePath == "/tmp/ord_newrelic_" + runDateStr + ".gz", "Temp output file path incorrect")
 
-    val tempOutputFilePath1 = defaultExportSvc invokePrivate getTempOutputFilePath("/etl/entries/ord_newrelic1_2015-02-13.gz", "")
-    assert(tempOutputFilePath1 == "ord_newrelic1_2015-02-13.gz", "Temp output file path incorrect")
+    val tempOutputFilePath1 = defaultExportSvc invokePrivate getTempOutputFilePath(runDate, "")
+    assert(tempOutputFilePath1 == "ord_newrelic_" + runDateStr + ".gz", "Temp output file path incorrect")
 
   }
 }

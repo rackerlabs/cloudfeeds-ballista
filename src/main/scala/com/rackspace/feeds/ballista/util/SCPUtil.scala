@@ -50,8 +50,8 @@ class SCPUtil {
 
       sendFileSize(remoteFileName, localFilePath, remoteOutputStream, remoteInputStream, subDir)
       sendContent(localFilePath, remoteOutputStream, remoteInputStream)
-      remoteOutputStream.close()
-
+      IOUtils.closeQuietly(remoteOutputStream)
+      
       channel.disconnect()
       session.disconnect()
 
@@ -101,10 +101,10 @@ class SCPUtil {
     try {
       Iterator
         .continually (inputStream.read(buf, 0, buf.length))
-        .takeWhile (-1 !=)
+        .takeWhile (numberOfBytesRead => numberOfBytesRead != -1)
         .foreach (numberOfBytesRead => remoteOutputStream.write(buf, 0, numberOfBytesRead))
     } finally {
-      inputStream.close()
+      IOUtils.closeQuietly(inputStream)
     }
 
     buf(0) = 0.toByte

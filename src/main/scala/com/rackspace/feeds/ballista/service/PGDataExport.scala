@@ -4,6 +4,7 @@ import java.io.OutputStream
 import javax.sql.DataSource
 
 import com.rackspace.feeds.ballista.util.DataSourceUtil
+import org.apache.commons.io.IOUtils
 import org.postgresql.PGConnection
 
 class PGDataExport extends DataExport {
@@ -17,7 +18,7 @@ class PGDataExport extends DataExport {
         .copyOut(query, outputStream)
 
     } finally {
-      outputStream.close()
+      IOUtils.closeQuietly(outputStream)
     }
   }
   

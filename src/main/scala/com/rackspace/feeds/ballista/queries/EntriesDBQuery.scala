@@ -4,6 +4,8 @@ import java.sql.Connection
 import javax.sql.DataSource
 
 import com.rackspace.feeds.ballista.config.CommandOptionsParser
+import org.apache.commons.dbutils.DbUtils
+import org.apache.commons.io.IOUtils
 import org.joda.time.DateTime
 import org.joda.time.format.{DateTimeFormatter, DateTimeFormat}
 import org.slf4j.LoggerFactory
@@ -83,7 +85,7 @@ class EntriesDBQuery extends DBQuery {
     } catch {
       case e: Exception => throw new RuntimeException("Error retrieving the correct entries partition table", e)
     } finally {
-      connection.close()
+      DbUtils.closeQuietly(connection)
     }
   }
 
@@ -119,7 +121,7 @@ class EntriesDBQuery extends DBQuery {
       case e: Exception => 
         throw new RuntimeException(s"Error validating the existence of partitioned entries table[$tableName]", e)
     } finally {
-      connection.close()
+      DbUtils.closeQuietly(connection)
     }
     
     if (tableCount != 1) {

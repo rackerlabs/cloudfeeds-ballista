@@ -3,8 +3,11 @@ package com.rackspace.feeds.ballista.util
 import java.io.{ByteArrayInputStream, StringReader}
 
 import com.rackspace.feeds.ballista.config.AppConfig.export.to.hdfs.scp._
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.{FunSuite, PrivateMethodTester}
 
+@RunWith(classOf[JUnitRunner])
 class SCPUtilTest  extends FunSuite with PrivateMethodTester {
   
   test("should throw exception for an error message from scp") {

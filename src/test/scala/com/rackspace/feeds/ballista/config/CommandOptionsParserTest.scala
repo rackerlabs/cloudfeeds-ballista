@@ -2,8 +2,11 @@ package com.rackspace.feeds.ballista.config
 
 import org.joda.time.DateTime
 import org.joda.time.format.{DateTimeFormatter, DateTimeFormat}
+import org.junit.runner.RunWith
 import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 
+@RunWith(classOf[JUnitRunner])
 class CommandOptionsParserTest extends FunSuite {
 
   val dateTimePattern: DateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd")
@@ -95,13 +98,11 @@ class CommandOptionsParserTest extends FunSuite {
   test ("verify options sent from command line are being set correctly") {
     val runDate: DateTime = DateTime.now.minusDays(2).withTimeAtStartOfDay()
     val dbNames: Set[String] = AppConfig.export.from.dbs.dbConfigMap.keySet
-    val overwrite: Boolean = true
-    
+
     val runDateStr: String = dateTimePattern.print(runDate)
     val dbNamesStr: String = dbNames.mkString(",")
-    val overwriteStr: String = overwrite.toString
-    
-    val args = Array[String]("--runDate", runDateStr, "--dbNames", dbNamesStr, "--overwrite", overwriteStr)
+
+    val args = Array[String]("--runDate", runDateStr, "--dbNames", dbNamesStr)
 
     CommandOptionsParser.getCommandOptions(args) match {
       case Some(commandOptions) =>
