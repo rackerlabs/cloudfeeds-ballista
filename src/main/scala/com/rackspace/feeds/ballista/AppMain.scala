@@ -7,14 +7,26 @@ class AppMain {
 
   val logger = LoggerFactory.getLogger(getClass)
 
-  def doProcess(args: Array[String]): Unit = {
+  /**
+   * This method processes the given command and returns a corresponding exit
+   * code.
+   *  
+   * @param args
+   * @return
+   */
+  def doProcess(args: Array[String]): Int = {
 
-    CommandOptionsParser.getCommandOptions(args) match {
+    val exitCode = CommandOptionsParser.getCommandOptions(args) match {
       case Some(commandOptions) =>
         new CommandProcessor().doProcess(commandOptions)
+
       case None =>
         println("Invalid command options. For help try with option --help")
+        CommandProcessor.EXIT_CODE_INVALD_ARGUMENTS
     }
+    
+    logger.info(s"Process completed with exit code $exitCode")
+    exitCode
   }
 
 
@@ -23,7 +35,8 @@ class AppMain {
 object AppMain {
 
   def main(args: Array[String]) {
-    new AppMain().doProcess(args)
+    val exitCode = new AppMain().doProcess(args)
+    System.exit(exitCode)
   }
   
 }
