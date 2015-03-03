@@ -34,33 +34,38 @@ class DefaultExportSvc(dbName: String) extends ExportSvc {
     logger.debug(s"query: $query")
 
     val tempOutputFilePath = getTempOutputFilePath(runDate, AppConfig.export.tempOutputDir)
-    
+
     logger.info(s"Exporting data from db:[$dbName] to temporary file:[$tempOutputFilePath]")
-    
+
     val totalRecords = super.export(dataSource, query, tempOutputFilePath)
-    
+
     logger.info(s"Exported [$totalRecords] records from db:[$dbName] to temporary file:[$tempOutputFilePath]")
 
-    scpFile(tempOutputFilePath, runDate)
-    
+    scpAndDeleteTempFile(tempOutputFilePath, runDate)
+
     totalRecords
   }
 
   /**
    * SCP the local file $tempOutputFilePath to <configured remote output file location>/$runDate
+   * Once the scp is successful, delete the file
    *  
    * @param tempOutputFilePath
    * @param runDate
    */
-  def scpFile(tempOutputFilePath: String, runDate: DateTime) {
+  private def scpAndDeleteTempFile(tempOutputFilePath: String, runDate: DateTime) {
     val remoteOutputFileName = getRemoteFileName(runDate)
     val remoteOutputFileLocation = dbConfigMap(dbName)(DBProps.outputFileLocation)
     val subDir = if (isOutputFileDateDriven) DateTimeFormat.forPattern(DATE_FORMAT).print(runDate) else ""
 
     scpUtil.scp(sessionInfo, tempOutputFilePath, remoteOutputFileName, remoteOutputFileLocation, subDir)
+
+    new File(tempOutputFilePath).delete()
+    logger.info(s"Deleted $tempOutputFilePath file")
+
   }
 
-  private def getQuery(queryParams: Map[String, Any]) = {
+  def getQuery(queryParams: Map[String, Any]) = {
     val dbQuery = getInstance(dbConfigMap(dbName)(DBProps.queryClass))
     val datacenter = AppConfig.export.datacenter
   

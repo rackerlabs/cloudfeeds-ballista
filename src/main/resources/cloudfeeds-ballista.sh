@@ -38,7 +38,6 @@ fi
 # Sanity checks #
 #################
 
-echo ${CONFIG_DIRECTORY}
 # check for the configuration directory
 if [ ! -d "${CONFIG_DIRECTORY}" ]; then
   echo "Unable to find ${CONFIG_DIRECTORY}."

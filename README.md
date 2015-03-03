@@ -34,15 +34,19 @@ gradle clean buildRpm
 ```
 
 ## How to run the App
-Run a simple build to create an installable app. Run the following command.
+Run the command below to create a runnable jar. 
+```
+gradle clean build uberjar
+```
+Run the following command to run the app.
 
 ```
-java -Dconfig.file="/<file path>/cloudfeeds-ballista.conf" -Dlogback.configurationFile="/<file path>/logback.xml"-jar build/libs/cloudfeeds-ballista-<version>.jar
+java -Dconfig.file=/<file path>/cloudfeeds-ballista.conf -Dlogback.configurationFile=/<file path>/logback.xml -jar build/libs/cloudfeeds-ballista-<version>.jar
 ```
 ## How to run the App after installing the rpm
 Run the command to build an RPM. Install rpm. Execute the below script   
 
-sh /usr/share/cloudfeeds-ballista/bin/cloudfeeds-ballista.sh
+sh /opt/cloudfeeds-ballista/bin/cloudfeeds-ballista.sh
 
 The app expects the configuration files to be present at /etc/cloudfeeds-ballista
 

@@ -28,7 +28,7 @@ ext.rpmProps = [
         app_name: app_name,
 
         // path where our jars will be put on the system via the rpm/deb
-        prefix_path: '/usr/share/' + app_name,
+        prefix_path: '/opt/' + app_name,
 
         // path where our configs will be put on the system via the rpm/deb
         config_path: '/etc/' + app_name,
@@ -57,6 +57,7 @@ dependencies {
     compile 'com.jcraft:jsch:0.1.51'
     compile 'org.apache.commons:commons-lang3:3.3.2'
     compile 'commons-io:commons-io:2.4'
+    compile 'commons-dbutils:commons-dbutils:1.6'
 
     testCompile 'junit:junit:4.11'
     testCompile 'org.scalatest:scalatest_2.10:2.1.7'
@@ -81,6 +82,17 @@ ospackage {
     directory(rpmProps.prefix_path + '/lib', 755)
     directory(rpmProps.prefix_path + '/bin', 755)
 
+    // copy config files
+    from('src/main/resources') {
+        into rpmProps.config_path
+        include 'cloudfeeds-ballista.conf'
+        include 'logback.xml'
+        user rpmProps.app_user
+        permissionGroup rpmProps.app_group
+        fileMode 0644
+        fileType CONFIG | NOREPLACE
+    }
+    
     into rpmProps.prefix_path
 
     // pull our init script
@@ -132,4 +144,8 @@ buildRpm.doFirst {
     
     // create a symlink to named <app_name>.jar to the versioned jar
     link(rpmProps.prefix_path + '/lib/' + rpmProps.app_name + '.jar', rpmProps.prefix_path + '/lib/' + version_jar)
+}
+
+compileScala {
+    scalaCompileOptions.additionalParameters = ["-feature"]
 }
