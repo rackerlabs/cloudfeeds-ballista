@@ -17,6 +17,12 @@ import scala.collection.mutable
 import scala.collection.mutable.{HashMap, MultiMap, Set}
 import scala.util.{Failure, Success, Try}
 
+object CommandProcessor {
+  val EXIT_CODE_SUCCESS: Int = 0
+  val EXIT_CODE_INVALD_ARGUMENTS: Int = 1
+  val EXIT_CODE_FAILURE: Int = 2
+}
+
 /**
  * This class is not thread safe
  */
@@ -29,9 +35,7 @@ class CommandProcessor {
   val sessionInfo = new SCPSessionInfo(user, password, host, port, privateKeyFilePath, privateKeyPassPhrase)
   
   val SUCCESS_FILE_NAME: String = "_SUCCESS"
-  val RETURN_CODE_SUCCESS: Int = 0
-  val RETURN_CODE_FAILURE: Int = -1
-  
+
   //creates a map of outputLocation and Set[dbNames] storing data in that output location
   val outputLocationMap = new mutable.HashMap[String, mutable.Set[String]] with mutable.MultiMap[String, String]
   
@@ -43,11 +47,11 @@ class CommandProcessor {
     
     if (commandOptions.dbNames.size == resultMap.keySet.size) {
       createSuccessFile(resultMap, commandOptions.runDate)
-      RETURN_CODE_SUCCESS
+      CommandProcessor.EXIT_CODE_SUCCESS
     } else {
       val dbNamesMissingResults = commandOptions.dbNames.filterNot(resultMap.keySet).mkString(",")
       logger.error(s"!!!!!! Results missing for some dbNames[$dbNamesMissingResults] !!!!!")
-      RETURN_CODE_FAILURE
+      CommandProcessor.EXIT_CODE_FAILURE
     }
 
   }
