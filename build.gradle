@@ -1,14 +1,23 @@
 buildscript {
     repositories {
+        mavenLocal()
+        maven { url "https://maven.research.rackspacecloud.com/content/repositories/snapshots/" }
+        maven { url "https://maven.research.rackspacecloud.com/content/repositories/releases/" }
         mavenCentral()
         jcenter()
+        maven { url 'https://oss.sonatype.org/content/groups/public' }
     }
     dependencies {
         classpath 'com.netflix.nebula:gradle-ospackage-plugin:2.0.3'
     }
 }
 
+plugins {
+    id 'net.researchgate.release' version '2.0.2'
+}
+
 apply plugin: 'scala'
+apply plugin: 'maven'
 apply plugin: 'os-package-base'
 
 repositories {
@@ -18,6 +27,8 @@ repositories {
 
 group = 'com.rackspace.feeds.ballista'
 sourceCompatibility = 1.7
+
+defaultTasks  'clean', 'build'
 
 ext.app_name = 'cloudfeeds-ballista'
 ext.rpmProps = [
@@ -146,6 +157,30 @@ buildRpm.doFirst {
     link(rpmProps.prefix_path + '/lib/' + rpmProps.app_name + '.jar', rpmProps.prefix_path + '/lib/' + version_jar)
 }
 
-compileScala {
-    scalaCompileOptions.additionalParameters = ["-feature"]
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            // nexusUsername and nexusPassword are passed in via -P option when gradle is run
+            repository(url: "https://maven.research.rackspacecloud.com/content/repositories/releases/") {
+                authentication(userName: nexusUsername, password: nexusPassword)
+            }
+            snapshotRepository(url: "https://maven.research.rackspacecloud.com/content/repositories/snapshots/") {
+                authentication(userName: nexusUsername, password: nexusPassword)
+            }
+            pom.groupId    = project.group
+            pom.artifactId = project.name
+            pom.version    = project.version.minus('-SNAPSHOT')
+        }
+    }
 }
+
+release {
+    failOnPublishNeeded = false
+    failOnCommitNeeded = false
+    failOnUnversionedFiles = false
+    tagPrefix = 'cloudfeeds-ballista'
+    // for testing on dev boxes
+    //git.requireBranch = ''
+}
+
+createReleaseTag.dependsOn uploadArchives
