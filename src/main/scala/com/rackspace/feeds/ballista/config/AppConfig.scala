@@ -20,7 +20,6 @@ object AppConfig {
 
     logger.info("Loading config from external path:" + System.getProperty("config.file"))
     ConfigFactory.load()
-      .withFallback(classpathConfig)
 
   } else {
     logger.info("Loading config from classpath")
