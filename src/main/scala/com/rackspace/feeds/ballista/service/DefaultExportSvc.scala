@@ -18,7 +18,7 @@ class DefaultExportSvc(dbName: String) extends ExportSvc {
   val DATE_FORMAT: String = "yyyy-MM-dd"
   val logger = LoggerFactory.getLogger(getClass)
   
-  override val dataExport = new PGDataExport
+  override val dataExport:DataExport = new PGDataExport
   override val fsClient = new GZFSClient
   lazy val dataSource = DataSourceRepository.getDataSource(dbName)
 

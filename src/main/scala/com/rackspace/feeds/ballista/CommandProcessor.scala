@@ -62,7 +62,7 @@ class CommandProcessor {
 
   def export(queryParams: Map[String, Any], dbName: String): Try[(String, Long)] = {
 
-    val result = Try(dbName -> new DefaultExportSvc(dbName).export(queryParams))
+    val result = Try(dbName -> getExportSvc(dbName).export(queryParams))
     
     result match {
       case Failure(ex) => logger.error(s"Exception exporting data from database [$dbName]", ex)
@@ -70,9 +70,14 @@ class CommandProcessor {
         val outputFileLocation = dbConfigMap(dbName)(DBProps.outputFileLocation).replaceFirst("/$", "")
         outputLocationMap.addBinding(outputFileLocation, dbName)
     }
-    
+
     result
   }
+
+  protected def getExportSvc(dbName: String): DefaultExportSvc = {
+    new DefaultExportSvc(dbName)
+  }
+
   /**
    * This method creates a _SUCCESS file for each unique output file location. If multiple databases
    * have the same output file location, the _SUCCESS file will indicate the success of each of these
