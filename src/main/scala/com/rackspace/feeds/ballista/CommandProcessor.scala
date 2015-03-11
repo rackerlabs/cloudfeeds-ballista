@@ -6,7 +6,7 @@ import com.rackspace.feeds.ballista.config.AppConfig.export.from.dbs._
 import com.rackspace.feeds.ballista.config.AppConfig.export.to.hdfs.scp._
 import com.rackspace.feeds.ballista.config.CommandOptions
 import com.rackspace.feeds.ballista.constants.DBProps
-import com.rackspace.feeds.ballista.service.{DefaultExportSvc, LocalFSClient}
+import com.rackspace.feeds.ballista.service.{DryRunProcessor, DefaultExportSvc, LocalFSClient}
 import com.rackspace.feeds.ballista.util.{SCPSessionInfo, SCPUtil}
 import org.apache.commons.io.IOUtils
 import org.joda.time.DateTime
@@ -41,17 +41,25 @@ class CommandProcessor {
   
   def doProcess(commandOptions: CommandOptions): Int = {
     logger.info(s"Process is being run with these options $commandOptions")
-
-    val resultMap = commandOptions.dbNames.map( dbName => export(createQueryParams(commandOptions), dbName))
-                                    .filter(_.isSuccess).map(_.get).toMap
     
-    if (commandOptions.dbNames.size == resultMap.keySet.size) {
-      createSuccessFile(resultMap, commandOptions.runDate)
-      CommandProcessor.EXIT_CODE_SUCCESS
-    } else {
-      val dbNamesMissingResults = commandOptions.dbNames.filterNot(resultMap.keySet).mkString(",")
-      logger.error(s"!!!!!! Results missing for some dbNames[$dbNamesMissingResults] !!!!!")
-      CommandProcessor.EXIT_CODE_FAILURE
+    commandOptions.dryrun match {
+      case true => new DryRunProcessor().dryrun()
+      case false => {
+        val resultMap = commandOptions.dbNames
+          .map( dbName => export(createQueryParams(commandOptions), dbName))
+          .filter(_.isSuccess)
+          .map(_.get)
+          .toMap
+
+        if (commandOptions.dbNames.size == resultMap.keySet.size) {
+          createSuccessFile(resultMap, commandOptions.runDate)
+          CommandProcessor.EXIT_CODE_SUCCESS
+        } else {
+          val dbNamesMissingResults = commandOptions.dbNames.filterNot(resultMap.keySet).mkString(",")
+          logger.error(s"!!!!!! Results missing for some dbNames[$dbNamesMissingResults] !!!!!")
+          CommandProcessor.EXIT_CODE_FAILURE
+        }
+      }
     }
 
   }
