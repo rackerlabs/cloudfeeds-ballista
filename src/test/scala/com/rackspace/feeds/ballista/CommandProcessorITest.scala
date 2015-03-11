@@ -78,7 +78,7 @@ class TestCommandProcessor extends CommandProcessor {
   
 }
 
-class CommpandProcessorITest extends FunSuite with BeforeAndAfterAll {
+class CommandProcessorITest extends FunSuite with BeforeAndAfterAll {
 
   override def beforeAll() = {
     SCPServer.configureAndStartServer()
