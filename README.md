@@ -57,7 +57,7 @@ The app expects the configuration files to be present at /etc/cloudfeeds-ballist
   -n <value> | --dbNames <value>
          dbNames is comma separated list of database names to be exported. Default value is all the databases configured.           
   --dryrun
-           dryrun is a true/false flag. Set this flag to verify all the configurations. When this option is set other options are ignored.
+           dryrun is a true/false flag. Set this flag to test connections to DB and remote systems. When this option is set other options are ignored.
   --help
          Use this option to get detailed usage information of this utility.
 

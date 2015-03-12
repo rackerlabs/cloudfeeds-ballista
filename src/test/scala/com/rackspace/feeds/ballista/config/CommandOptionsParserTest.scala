@@ -33,8 +33,7 @@ class CommandOptionsParserTest extends FunSuite {
   }
 
   val referenceDate = DateTime.now
-  List(DateTime.now,
-       DateTime.now.plusDays(1),
+  List(DateTime.now.plusDays(1),
        DateTime.now.minusDays(AppConfig.export.daysDataAvailable + 1)
   ).foreach {dateTime =>
     test (s"rundate should be invalid when rundate is $dateTime on $referenceDate") {
@@ -47,7 +46,7 @@ class CommandOptionsParserTest extends FunSuite {
     }
   }
   
-  (1 to AppConfig.export.daysDataAvailable).foreach{numberOfDays =>
+  (0 to AppConfig.export.daysDataAvailable).foreach{numberOfDays =>
     test (s"rundate should be valid when rundate is $numberOfDays days back from $referenceDate") {
 
       val runDate = referenceDate.minusDays(numberOfDays)
@@ -60,7 +59,7 @@ class CommandOptionsParserTest extends FunSuite {
   }
   
   test ("parsing validation should fail for invalid rundate") {
-    val args = Array[String]("-d", dateTimePattern.print(DateTime.now))
+    val args = Array[String]("-d", dateTimePattern.print(DateTime.now.plusDays(1)))
 
     CommandOptionsParser.getCommandOptions(args) match {
       case Some(commandOptions) =>
@@ -86,7 +85,7 @@ class CommandOptionsParserTest extends FunSuite {
   }
 
   test ("parsing validation should fail for invalid overwrite flag") {
-    val args = Array[String]("-o", "yeah")
+    val args = Array[String]("-o", "invalid_command_option")
 
     CommandOptionsParser.getCommandOptions(args) match {
       case Some(commandOptions) =>
