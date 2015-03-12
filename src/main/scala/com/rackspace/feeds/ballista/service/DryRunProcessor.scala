@@ -35,8 +35,10 @@ class DryRunProcessor {
     val scpVerifyResult: Try[Unit] = verifySCPInfo()
     
     if (dbErrorConfigMap.size > 0 || scpVerifyResult.isFailure) {
+      logger.error("!!!!!!  Dryrun failed     !!!!!!!!!")
       CommandProcessor.EXIT_CODE_FAILURE
     } else {
+      logger.info("!!!!!!  Dryrun successful !!!!!!!!!")
       CommandProcessor.EXIT_CODE_SUCCESS
     }
 
