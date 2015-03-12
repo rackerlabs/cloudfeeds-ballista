@@ -56,6 +56,8 @@ The app expects the configuration files to be present at /etc/cloudfeeds-ballist
          runDate is a date in the format yyyy-MM-dd. Data belonging to this date will be exported. Default value is yesterday.           
   -n <value> | --dbNames <value>
          dbNames is comma separated list of database names to be exported. Default value is all the databases configured.           
+  --dryrun
+           dryrun is a true/false flag. Set this flag to verify all the configurations. When this option is set other options are ignored.
   --help
          Use this option to get detailed usage information of this utility.
 

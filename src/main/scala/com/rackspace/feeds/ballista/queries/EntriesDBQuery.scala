@@ -52,7 +52,7 @@ class EntriesDBQuery extends DBQuery {
    * @param dataSource
    * @return partitioned entries table name
    */
-  private def getTableName(runDate: DateTime, dataSource: DataSource): String = {
+  protected def getTableName(runDate: DateTime, dataSource: DataSource): String = {
 
     val runDateStr = dateTimeFormatter.print(runDate)
 
@@ -96,7 +96,7 @@ class EntriesDBQuery extends DBQuery {
    * @param dataSource
    * @return true/false indicating the presence of the table.
    */
-  private def isTableExist(tableName: String, dataSource: DataSource) = {
+  protected def isTableExist(tableName: String, dataSource: DataSource) = {
 
     var connection:Connection  = null
     var tableCount:Int = 0

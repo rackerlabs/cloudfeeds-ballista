@@ -5,7 +5,8 @@ import org.joda.time.format.DateTimeFormat
 import scopt.Read
 
 case class CommandOptions(runDate: DateTime = DateTime.now.minusDays(1).withTimeAtStartOfDay(),
-                          dbNames: Set[String] = AppConfig.export.from.dbs.dbConfigMap.keySet)
+                          dbNames: Set[String] = AppConfig.export.from.dbs.dbConfigMap.keySet,
+                          dryrun: Boolean = false)
 
 object CommandOptionsParser {
 
@@ -48,6 +49,15 @@ object CommandOptionsParser {
           |Available dbNames for this configuration: ${dbNamesSet.mkString(",")}
         """.stripMargin.replaceAll("\n", " ")
       }
+    opt[Unit]("dryrun") action { (x, c) =>
+      c.copy(dryrun = true)
+    } text {
+      """
+        |dryrun is a true/false flag.
+        |Set this flag to verify all the configurations.
+        |When this option is set other options are ignored.
+      """.stripMargin.replaceAll("\n", " ")
+    }
     help("help") text {
       """
         |Use this option to get detailed usage information of this utility.
