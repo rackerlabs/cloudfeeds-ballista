@@ -41,6 +41,12 @@ class CommandProcessor {
   
   def doProcess(commandOptions: CommandOptions): Int = {
     logger.info(s"Process is being run with these options $commandOptions")
+    if (commandOptions.runDate.isAfter(DateTime.now.minusDays(1).withTimeAtStartOfDay())) {
+      logger.info(s"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+      logger.info(s"!!!!! WARNING: Ballista is being run for today's date. Exporting partial data. !!!!!!")
+      logger.info(s"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    }
+    
     
     commandOptions.dryrun match {
       case true => new DryRunProcessor().dryrun()
