@@ -35,8 +35,8 @@ class EntriesDBQuery extends DBQuery {
        |              eventtype, 
        |              tenantid, 
        |              '$datacenter' as region,
-       |              feed, 
-       |              '$runDateStr' as date
+       |              '$runDateStr' as date,
+       |              feed
        |         FROM $tableName
        |        limit $maxRowLimit)
        |   TO STDOUT
