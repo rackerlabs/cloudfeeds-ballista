@@ -160,6 +160,14 @@ buildRpm.doFirst {
     link(rpmProps.prefix_path + '/lib/' + rpmProps.app_name + '.jar', rpmProps.prefix_path + '/lib/' + version_jar)
 }
 
+artifacts {
+    archives(buildRpm) {
+        name   project.name
+        type   'rpm'
+        builtBy buildRpm
+    }
+}
+
 uploadArchives {
     repositories {
         mavenDeployer {
