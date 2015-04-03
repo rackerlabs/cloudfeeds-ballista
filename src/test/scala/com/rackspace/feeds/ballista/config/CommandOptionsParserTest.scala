@@ -101,13 +101,14 @@ class CommandOptionsParserTest extends FunSuite {
     val runDateStr: String = dateTimePattern.print(runDate)
     val dbNamesStr: String = dbNames.mkString(",")
 
-    val args = Array[String]("--runDate", runDateStr, "--dbNames", dbNamesStr, "--dryrun")
+    val args = Array[String]("--runDate", runDateStr, "--dbNames", dbNamesStr, "--dryrun", "--scponly")
 
     CommandOptionsParser.getCommandOptions(args) match {
       case Some(commandOptions) =>
         assert(commandOptions.runDate === runDate, "runDate option is not set to the correct value")
         assert(commandOptions.dbNames === dbNames, "dbNames option is not set to the correct value")
         assert(commandOptions.dryrun === true, "dryrun option is not set to the correct value")
+        assert(commandOptions.scponly === true, "scponly option is not set to the correct value")
       case None => fail("Unable to parse command options")
     }
   }

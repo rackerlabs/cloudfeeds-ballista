@@ -28,8 +28,8 @@ class TestEntriesDBQuery extends EntriesDBQuery {
   override def getTableName(runDate: DateTime, dataSource: DataSource): String = "entries"
   override def isTableExist(tableName: String, dataSource: DataSource) = true
 
-  override def fetch(runDate: DateTime, datacenter: String, dataSource: DataSource, maxRowLimit: String): String = {
-    val pgSQL = super.fetch(runDate, datacenter, dataSource, maxRowLimit)
+  override def fetch(runDate: DateTime, region: String, dataSource: DataSource, maxRowLimit: String): String = {
+    val pgSQL = super.fetch(runDate, region, dataSource, maxRowLimit)
     
     //hack: To use the same select query as the one used by the actual implementation. 
     //Stripping out the copy part of the sql and converting some functions to h2 specific
@@ -99,8 +99,8 @@ class CommandProcessorITest extends FunSuite with BeforeAndAfterAll {
     assert(exitCode == 0, "Wrong exit code")
 
     val remoteOutputLocation = AppConfig.export.from.dbs.dbConfigMap(testdbName)(DBProps.outputFileLocation)
-    val datacenter = AppConfig.export.datacenter
-    val remoteFilePath = s"$remoteOutputLocation/$runDateStr/${datacenter}_${testdbName}_$runDateStr.gz"
+    val region = AppConfig.export.region
+    val remoteFilePath = s"$remoteOutputLocation/$runDateStr/${region}_${testdbName}_$runDateStr.gz"
     val remoteSuccessFilePath = s"$remoteOutputLocation/$runDateStr/_SUCCESS"
 
     assert(Files.exists(Paths.get(remoteFilePath)), s"Data for db[$testdbName] not present on remote server at path[$remoteFilePath]")

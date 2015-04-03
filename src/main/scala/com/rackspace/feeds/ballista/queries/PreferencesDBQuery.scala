@@ -6,7 +6,7 @@ import org.joda.time.DateTime
 
 class PreferencesDBQuery extends DBQuery {
 
-  override def fetch(runDate: DateTime, datacenter: String, dataSource: DataSource, maxRowLimit: String): String = {
+  override def fetch(runDate: DateTime, region: String, dataSource: DataSource, maxRowLimit: String): String = {
     s"""
        | COPY (SELECT id,
        |              alternate_id,

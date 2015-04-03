@@ -15,29 +15,73 @@ class SCPUtil {
   val logger = LoggerFactory.getLogger(getClass)
 
   /**
-   * Using $sessionInfo, scp's the file $localFilePath to $remoteFileLocation/$subDir/$remoteFileName 
+   * Using sessionInfo, creates remote directory $remoteFileLocation/$remoteDir
+   *
+   * @param sessionInfo
+   * @param remoteFileLocation
+   * @param remoteDir
+   */
+  def scpEmptyDirectory(sessionInfo: SCPSessionInfo, remoteFileLocation: String, remoteDir: String) = {
+
+    logger.info(s"SCP start: creating remote directory [$remoteFileLocation/$remoteDir]")
+    
+    val protocolMessage = new StringBuilder
+    protocolMessage.append(s"D0755 0 $remoteDir\n")
+    protocolMessage.append("E\n")
+    
+    scpInternal(sessionInfo, localFilePath = "", remoteFileLocation, isDirectory = true, protocolMessage.toString())    
+    
+    logger.info(s"SCP end: created remote directory [$remoteFileLocation/$remoteDir]")
+  }
+
+  /**
+   * Using $sessionInfo, scp's the file $localFilePath to $remoteFileLocation/$remoteFileName 
    *  
    * @param sessionInfo
    * @param localFilePath
    * @param remoteFileLocation
+   * @param remoteFileName                           
    */
-  def scp(sessionInfo: SCPSessionInfo, localFilePath: String, remoteFileName: String, remoteFileLocation: String, subDir: String) = {
+  def scpFile(sessionInfo: SCPSessionInfo, localFilePath: String, remoteFileLocation: String, remoteFileName: String) = {
 
-    val remoteFilePath = if (StringUtils.isNotEmpty(subDir))
-      s"$remoteFileLocation/$subDir/$remoteFileName"
-    else 
-      s"$remoteFileLocation/$remoteFileName"
+    logger.info(s"SCP start: local file [$localFilePath] to remote file [$remoteFileLocation/$remoteFileName]")
+
+    val localFile = new File(localFilePath)
+    val localFileSize = localFile.length()
     
-    logger.info(s"SCP start: local file [$localFilePath] to remote file [$remoteFilePath]")
+    val streamCommand = s"C0644 $localFileSize $remoteFileName\n"
     
+    scpInternal(sessionInfo, localFilePath, remoteFileLocation, isDirectory = false, streamCommand)
+    
+    logger.info(s"SCP end: local file [$localFilePath] to remote file [$remoteFileLocation/$remoteFileName]")
+  }
+
+  /**
+   * Using $sessionInfo, scp's the file $localFilePath to $remoteFileLocation based on the $protocolMessage. Can be
+   * used to either to scp files or empty directories based on the $isDirectory flag. 
+   * 
+   * - protocolMessage has to be set appropriate based on whether directory or file is being scp'ed.
+   * - if localFilePath is empty, content is empty while writing file and directory is empty while creating directory. 
+   *   Note that protocolMessage has to be changed appropriately
+   *  
+   * @param sessionInfo
+   * @param localFilePath
+   * @param remoteFileLocation
+   * @param isDirectory
+   * @param protocolMessage
+   */
+  private def scpInternal(sessionInfo: SCPSessionInfo, localFilePath: String, remoteFileLocation: String, isDirectory: Boolean, protocolMessage: String) = {
+
     var remoteOutputStream: OutputStream = null
     var remoteInputStream: InputStream = null
 
     try {
+
       val session: Session = sessionInfo.createSession()
       session.connect()
 
-      val channel: Channel = openChannelAndSetCommand(remoteFileLocation, session, subDir)
+      val scpCommand = buildSCPCommand(remoteFileLocation, isDirectory)
+      val channel: Channel = openChannelAndSetCommand(remoteFileLocation, session, scpCommand)
 
       remoteOutputStream = channel.getOutputStream
       remoteInputStream = channel.getInputStream
@@ -48,10 +92,13 @@ class SCPUtil {
         logger.debug("channel connection successful")
       }
 
-      sendFileSize(remoteFileName, localFilePath, remoteOutputStream, remoteInputStream, subDir)
-      sendContent(localFilePath, remoteOutputStream, remoteInputStream)
+      sendProtocolMessage(remoteOutputStream, remoteInputStream, protocolMessage)
+
+      if (StringUtils.isNotEmpty(localFilePath))
+        sendContent(localFilePath, remoteOutputStream, remoteInputStream)
+
       IOUtils.closeQuietly(remoteOutputStream)
-      
+
       channel.disconnect()
       session.disconnect()
 
@@ -59,25 +106,29 @@ class SCPUtil {
       IOUtils.closeQuietly(remoteOutputStream)
       IOUtils.closeQuietly(remoteInputStream)
     }
-    logger.info(s"SCP end: local file [$localFilePath] to remote file [$remoteFilePath]")
+
   }
-
-
-  private def openChannelAndSetCommand(remoteFileLocation: String, session: Session, subDir: String): Channel = {
+  
+  private def buildSCPCommand(remoteFileLocation: String, isDirectory: Boolean) = {
 
     /**
      *  scp -t is meant for running scp in sink mode on the remote node. These options are for internal
      *  usage only and aren't documented. I found this link very helpful.
      *  (https://blogs.oracle.com/janp/entry/how_the_scp_protocol_works)
-     *  
+     *
      *  Jsch library internally parses this command into a String array. So be careful 
      *  to not include any extra spaces inbetween.
-     *  
+     *
      *  Adding r flag if directory creation is involved
      */
-    val recursiveCopyFlag = if (StringUtils.isNotEmpty(subDir)) "r" else ""
     
-    val command = s"scp -${recursiveCopyFlag}t $remoteFileLocation"
+    val recursiveCopyFlag = if (isDirectory) "r" else ""
+    s"scp -${recursiveCopyFlag}t $remoteFileLocation"
+  }
+  
+  private def openChannelAndSetCommand(remoteFileLocation: String, session: Session, command: String): Channel = {
+
+
     val channel = session.openChannel("exec")
 
     logger.debug(s"scp command: [$command]")
@@ -117,37 +168,31 @@ class SCPUtil {
   }
 
   /**
-   * Sending raw protocol message to scp in sink mode indicating the filename, mode, length
-   * in the below format
+   * 
+   * Some sample protocol messages 
    *
    * Cmmmm <length> <filename>
    *  a single file copy, mmmmm is mode(as the one used in chmod command). Example: C0644 299 remote_file_name
    *  C indicates file copy (D indicates directory)
-   *
-   * Note: filename should not contain "/"
-   *  
+   * 
    * after C message the data is expected (unless the file is empty)
+   *  
+   * Dmmmm <length> <dirname>
+   *  start of recursive directory copy. Length is ignored but must be present. Example: D0755 0 docs
+   *
    * after D message either C or E is expected. This means that it's correct to copy an empty directory providing that user used -r option.
    *
-   * @param localFilePath
-   * @param out
-   * @param in
+   * @param out remote output stream
+   * @param in remoate intput stream
+   * @param protocolMessage scp protocol message
    */
-  private def sendFileSize(remoteFileName: String, localFilePath: String, out: OutputStream, in: InputStream, subDir: String) {
+  private def sendProtocolMessage(out: OutputStream, in: InputStream, protocolMessage: String) {
 
-    val localFile = new File(localFilePath)
-    val localFileSize = localFile.length()
-
-    val streamCommand = new StringBuilder
-    if (StringUtils.isNotEmpty(subDir))
-      streamCommand.append(s"D0755 0 $subDir\n")
-    streamCommand.append(s"C0644 $localFileSize $remoteFileName\n")
-
-    out.write(streamCommand.toString().getBytes)
+    out.write(protocolMessage.getBytes)
     out.flush()
 
     if (isValidTransfer(in)) {
-      logger.debug(s"[$streamCommand] message sent successfully")
+      logger.debug(s"[$protocolMessage] message sent successfully")
     }
   }
 
