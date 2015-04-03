@@ -69,13 +69,14 @@ dependencies {
     compile 'org.apache.commons:commons-lang3:3.3.2'
     compile 'commons-io:commons-io:2.4'
     compile 'commons-dbutils:commons-dbutils:1.6'
-    compile 'org.apache.mina:mina-core:2.0.9'
-    compile 'org.apache.sshd:sshd-core:0.14.0'
 
     testCompile 'junit:junit:4.11'
     testCompile 'org.scalatest:scalatest_2.10:2.1.7'
     testCompile 'org.mockito:mockito-all:1.9.5'
     testCompile 'com.h2database:h2:1.4.182'
+    testCompile 'org.apache.mina:mina-core:2.0.9'
+    testCompile 'org.apache.sshd:sshd-core:0.14.0'
+
 }
 
 
