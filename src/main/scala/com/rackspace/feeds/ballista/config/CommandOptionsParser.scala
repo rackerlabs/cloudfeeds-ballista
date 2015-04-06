@@ -6,6 +6,7 @@ import scopt.Read
 
 case class CommandOptions(runDate: DateTime = DateTime.now.minusDays(1).withTimeAtStartOfDay(),
                           dbNames: Set[String] = AppConfig.export.from.dbs.dbConfigMap.keySet,
+                          scponly: Boolean = false,
                           dryrun: Boolean = false)
 
 object CommandOptionsParser {
@@ -39,9 +40,9 @@ object CommandOptionsParser {
     opt[Set[String]]('n', "dbNames") action { (x, c) =>
         c.copy(dbNames = x) 
       } validate { dbs =>
-        if (dbs.size > 0 && dbs.subsetOf(dbNamesSet)) 
-          success 
-        else 
+        if (dbs.size > 0 && dbs.subsetOf(dbNamesSet))
+          success
+        else
           failure(s"Invalid dbNames[${dbs.toArray.mkString(",")}] specified. Available dbNames: ${dbNamesSet.mkString(",")}")
       } text {
         s"""
@@ -49,6 +50,14 @@ object CommandOptionsParser {
           |Available dbNames for this configuration: ${dbNamesSet.mkString(",")}
         """.stripMargin.replaceAll("\n", " ")
       }
+    opt[Unit]("scponly") action { (x, c) =>
+      c.copy(scponly = true)
+    } text {
+      """
+        |scponly is a true/false flag. When used along with dryrun flag does not have any affect.
+        |Set this flag to scp the file present in temporary path(mentioned in conf file to remote server.
+      """.stripMargin.replaceAll("\n", " ")
+    }
     opt[Unit]("dryrun") action { (x, c) =>
       c.copy(dryrun = true)
     } text {

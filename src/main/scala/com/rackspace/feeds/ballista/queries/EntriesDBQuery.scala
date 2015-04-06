@@ -16,7 +16,7 @@ class EntriesDBQuery extends DBQuery {
   val dateTimeFormatter: DateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd")
   val logger = LoggerFactory.getLogger(getClass)
   
-  override def fetch(runDate: DateTime, datacenter: String, dataSource: DataSource, maxRowLimit: String): String = {
+  override def fetch(runDate: DateTime, region: String, dataSource: DataSource, maxRowLimit: String): String = {
     val tableName = getTableName(runDate, dataSource)
     
     logger.debug(s"Preparing query to extract data from partitioned entries table[$tableName] for runDate[$runDate]")
@@ -34,7 +34,7 @@ class EntriesDBQuery extends DBQuery {
        |              array_to_string( categories, '|' ) as categories,
        |              eventtype, 
        |              tenantid, 
-       |              '$datacenter' as region,
+       |              '$region' as region,
        |              '$runDateStr' as date,
        |              feed
        |         FROM $tableName

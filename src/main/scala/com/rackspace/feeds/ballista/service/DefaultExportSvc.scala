@@ -1,6 +1,7 @@
 package com.rackspace.feeds.ballista.service
 
 import java.io.File
+import java.nio.file.{Paths, Files}
 
 import com.rackspace.feeds.ballista.config.AppConfig
 import com.rackspace.feeds.ballista.config.AppConfig.export.from.dbs.dbConfigMap
@@ -41,11 +42,21 @@ class DefaultExportSvc(dbName: String) extends ExportSvc {
 
     logger.info(s"Exported [$totalRecords] records from db:[$dbName] to temporary file:[$tempOutputFilePath]")
 
-    scpAndDeleteTempFile(tempOutputFilePath, runDate)
+    scpAndDeleteFile(tempOutputFilePath, runDate)
 
     totalRecords
   }
 
+  def scpAndDeleteTemporaryFile(runDate: DateTime) = {
+    val tempOutputFilePath = getTempOutputFilePath(runDate, AppConfig.export.tempOutputDir)
+    
+    if (Files.exists(Paths.get(tempOutputFilePath))) {
+      scpAndDeleteFile(tempOutputFilePath, runDate)
+    } else {
+      throw new RuntimeException(s"temp file $tempOutputFilePath not found. SCP did not start for db[$dbName].")
+    }
+  }
+  
   /**
    * SCP the local file $tempOutputFilePath to <configured remote output file location>/$runDate
    * Once the scp is successful, delete the file
@@ -53,23 +64,25 @@ class DefaultExportSvc(dbName: String) extends ExportSvc {
    * @param tempOutputFilePath
    * @param runDate
    */
-  private def scpAndDeleteTempFile(tempOutputFilePath: String, runDate: DateTime) {
+  private def scpAndDeleteFile(tempOutputFilePath: String, runDate: DateTime) {
     val remoteOutputFileName = getRemoteFileName(runDate)
-    val remoteOutputFileLocation = dbConfigMap(dbName)(DBProps.outputFileLocation)
-    val subDir = if (isOutputFileDateDriven) DateTimeFormat.forPattern(DATE_FORMAT).print(runDate) else ""
+    val remoteOutputFileLocation = if (isOutputFileDateDriven) 
+      s"${dbConfigMap(dbName)(DBProps.outputFileLocation)}/${DateTimeFormat.forPattern(DATE_FORMAT).print(runDate)}"
+    else 
+      dbConfigMap(dbName)(DBProps.outputFileLocation)
 
-    scpUtil.scp(sessionInfo, tempOutputFilePath, remoteOutputFileName, remoteOutputFileLocation, subDir)
+    scpUtil.scpFile(sessionInfo, tempOutputFilePath, remoteOutputFileLocation, remoteOutputFileName)
 
-    new File(tempOutputFilePath).delete()
-    logger.info(s"Deleted $tempOutputFilePath file")
+//    new File(tempOutputFilePath).delete()
+//    logger.info(s"Deleted $tempOutputFilePath file")
 
   }
 
   def getQuery(queryParams: Map[String, Any]) = {
     val dbQuery = getInstance(dbConfigMap(dbName)(DBProps.queryClass))
-    val datacenter = AppConfig.export.datacenter
+    val region = AppConfig.export.region
   
-    dbQuery.fetch(queryParams("runDate").asInstanceOf[DateTime], datacenter, dataSource, AppConfig.export.maxRowLimit)
+    dbQuery.fetch(queryParams("runDate").asInstanceOf[DateTime], region, dataSource, AppConfig.export.maxRowLimit)
   }
 
   /**
@@ -97,7 +110,7 @@ class DefaultExportSvc(dbName: String) extends ExportSvc {
    * @param tempDir
    * @return the file name specific to the dbName, current date
    */
-  private def getTempOutputFilePath(runDate: DateTime, tempDir: String): String = {
+  def getTempOutputFilePath(runDate: DateTime, tempDir: String): String = {
 
     val tempFileName: String = getRemoteFileName(runDate)
 
