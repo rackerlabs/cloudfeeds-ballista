@@ -73,8 +73,8 @@ class DefaultExportSvc(dbName: String) extends ExportSvc {
 
     scpUtil.scpFile(sessionInfo, tempOutputFilePath, remoteOutputFileLocation, remoteOutputFileName)
 
-//    new File(tempOutputFilePath).delete()
-//    logger.info(s"Deleted $tempOutputFilePath file")
+    new File(tempOutputFilePath).delete()
+    logger.info(s"Deleted $tempOutputFilePath file")
 
   }
 
