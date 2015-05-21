@@ -52,9 +52,4 @@ fi
 
 /usr/bin/java $JAVA_OPTS -jar $EXEC_JAR $RUN_OPTS $*
 
-rc=$?
-
-if [ $rc -eq 0 ]; then
-    # SUCCESS
-    date --iso-8601=seconds --utc > $LOG_PATH/last_success.txt
-fi
+exit $?

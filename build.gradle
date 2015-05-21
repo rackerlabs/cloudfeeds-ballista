@@ -114,8 +114,10 @@ ospackage {
     from('src/main/resources') {
         into 'bin'
         include 'cloudfeeds-ballista.sh'
+        include 'cloudfeeds-ballista_start.sh'
         user rpmProps.app_user
         permissionGroup rpmProps.app_group
+        fileMode 0755
     }
 
     // collect our jars
