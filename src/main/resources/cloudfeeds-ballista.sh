@@ -56,5 +56,5 @@ rc=$?
 
 if [ $rc -eq 0 ]; then
     # SUCCESS
-    date > $LOG_PATH/last_success.txt
+    date --iso-8601=seconds --utc > $LOG_PATH/last_success.txt
 fi
