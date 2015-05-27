@@ -51,3 +51,5 @@ if [ ! -d "${LOG_PATH}" ]; then
 fi
 
 /usr/bin/java $JAVA_OPTS -jar $EXEC_JAR $RUN_OPTS $*
+
+exit $?
