@@ -22,6 +22,8 @@ object CommandProcessor {
   val EXIT_CODE_SUCCESS: Int = 0
   val EXIT_CODE_INVALD_ARGUMENTS: Int = 1
   val EXIT_CODE_FAILURE: Int = 2
+  
+  val NON_DATA_FILE_PREFIX = "_"
 }
 
 /**
@@ -39,7 +41,7 @@ class CommandProcessor {
 
   //creates a map of outputLocation and Set[dbNames] storing data in that output location
   val outputLocationMap = new mutable.HashMap[String, mutable.Set[String]] with mutable.MultiMap[String, String]
-  
+
   def doProcess(commandOptions: CommandOptions): Int = {
     logger.info(s"Process is being run with these options $commandOptions")
     if (commandOptions.runDate.isAfter(DateTime.now.minusDays(1).withTimeAtStartOfDay())) {
@@ -96,7 +98,7 @@ class CommandProcessor {
 
   def scpEmptyDirectory(runDate: DateTime, outputFileLocation: String): Try[Unit] = {
 
-    val remoteDir: String = getRunDateString(runDate)
+    val remoteDir: String = s"${CommandProcessor.NON_DATA_FILE_PREFIX}${getRunDateString(runDate)}"
     val result = Try(scpUtil.scpEmptyDirectory(sessionInfo, outputFileLocation, remoteDir))
 
     result match {
@@ -184,7 +186,7 @@ class CommandProcessor {
         logger.info(s"Completed writing success file $localFilePath")
 
         //remote directory is already created during export process
-        scpUtil.scpFile(sessionInfo, localFilePath, s"$outputFileLocation/${getRunDateString(runDate)}", SUCCESS_FILE_NAME)
+        scpUtil.scpFile(sessionInfo, localFilePath, s"$outputFileLocation/${CommandProcessor.NON_DATA_FILE_PREFIX}${getRunDateString(runDate)}", SUCCESS_FILE_NAME)
 
       }
     }
