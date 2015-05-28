@@ -17,6 +17,8 @@ import org.apache.commons.lang3.StringUtils
 import org.h2.tools.Csv
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 
 /**
@@ -78,6 +80,7 @@ class TestCommandProcessor extends CommandProcessor {
   
 }
 
+@RunWith(classOf[JUnitRunner])
 class CommandProcessorITest extends FunSuite with BeforeAndAfterAll {
 
   override def beforeAll() = {
@@ -100,8 +103,8 @@ class CommandProcessorITest extends FunSuite with BeforeAndAfterAll {
 
     val remoteOutputLocation = AppConfig.export.from.dbs.dbConfigMap(testdbName)(DBProps.outputFileLocation)
     val region = AppConfig.export.region
-    val remoteFilePath = s"$remoteOutputLocation/$runDateStr/${region}_${testdbName}_$runDateStr.gz"
-    val remoteSuccessFilePath = s"$remoteOutputLocation/$runDateStr/_SUCCESS"
+    val remoteFilePath = s"$remoteOutputLocation/${CommandProcessor.NON_DATA_FILE_PREFIX}$runDateStr/${region}_${testdbName}_$runDateStr.gz"
+    val remoteSuccessFilePath = s"$remoteOutputLocation/${CommandProcessor.NON_DATA_FILE_PREFIX}$runDateStr/_SUCCESS"
 
     assert(Files.exists(Paths.get(remoteFilePath)), s"Data for db[$testdbName] not present on remote server at path[$remoteFilePath]")
     assert(Files.exists(Paths.get(remoteSuccessFilePath)), s"Success file not created on remote server at path[$remoteFilePath]")
