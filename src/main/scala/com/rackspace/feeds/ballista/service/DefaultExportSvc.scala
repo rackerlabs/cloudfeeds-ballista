@@ -3,7 +3,6 @@ package com.rackspace.feeds.ballista.service
 import java.io.File
 import java.nio.file.{Paths, Files}
 
-import com.rackspace.feeds.ballista.CommandProcessor
 import com.rackspace.feeds.ballista.config.AppConfig
 import com.rackspace.feeds.ballista.config.AppConfig.export.from.dbs.dbConfigMap
 import com.rackspace.feeds.ballista.config.AppConfig.export.to.hdfs.scp._
@@ -68,7 +67,7 @@ class DefaultExportSvc(dbName: String) extends ExportSvc {
   private def scpAndDeleteFile(tempOutputFilePath: String, runDate: DateTime) {
     val remoteOutputFileName = getRemoteFileName(runDate)
     val remoteOutputFileLocation = if (isOutputFileDateDriven) 
-      s"${dbConfigMap(dbName)(DBProps.outputFileLocation)}/${CommandProcessor.NON_DATA_FILE_PREFIX}${DateTimeFormat.forPattern(DATE_FORMAT).print(runDate)}"
+      s"${dbConfigMap(dbName)(DBProps.outputFileLocation)}/${DateTimeFormat.forPattern(DATE_FORMAT).print(runDate)}"
     else 
       dbConfigMap(dbName)(DBProps.outputFileLocation)
 
