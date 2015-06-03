@@ -88,7 +88,7 @@ class CommandProcessorITest extends FunSuite with BeforeAndAfterAll {
     SCPServer.stopServer()
   }
   
-  test("Verify that extracting testdb data and scp'ing is successful") {
+  test("Verify that extracting testdb(isOutputFileDateDriven=true) data and scp'ing is successful") {
 
     val runDate: DateTime = DateTime.now.minusDays(1).withTimeAtStartOfDay()
     val runDateStr: String = DateTimeFormat.forPattern("yyyy-MM-dd").print(runDate)
@@ -105,12 +105,12 @@ class CommandProcessorITest extends FunSuite with BeforeAndAfterAll {
 
     assert(Files.exists(Paths.get(remoteFilePath)), s"Data for db[$testdbName] not present on remote server at path[$remoteFilePath]")
     assert(Files.exists(Paths.get(remoteSuccessFilePath)), s"Success file not created on remote server at path[$remoteFilePath]")
-    assert(scala.io.Source.fromFile(remoteSuccessFilePath).mkString.replaceFirst("$\\n", "") == "testdb=5", "Success file content mismatch")
+    assert(scala.io.Source.fromFile(remoteSuccessFilePath).mkString.replaceFirst("$\\n", "") == s"$testdbName=5", "Success file content mismatch")
 
     var gZipReader:BufferedReader = null
     try {
       gZipReader = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(remoteFilePath)), "UTF-8"))
-      
+
       var count: Integer = 0
       Iterator.continually(gZipReader.readLine())
         .takeWhile(line => StringUtils.isNotEmpty(line))
@@ -120,11 +120,31 @@ class CommandProcessorITest extends FunSuite with BeforeAndAfterAll {
       })
 
       assert(5 == count, "Total number of records present in gZip file does not match with number of records in database")
-      
+
     } finally {
       IOUtils.closeQuietly(gZipReader)
     }
 
+  }
+
+  test("Verify that extracting testdb1(isOutputFileDateDriven=false) data and scp'ing is successful") {
+
+    val runDate: DateTime = DateTime.now.minusDays(1).withTimeAtStartOfDay()
+    val runDateStr: String = DateTimeFormat.forPattern("yyyy-MM-dd").print(runDate)
+
+    val testdbName: String = "testdb1"
+    val exitCode = new TestCommandProcessor().doProcess(CommandOptions(runDate, Set(testdbName)))
+
+    assert(exitCode == 0, "Wrong exit code")
+
+    val remoteOutputLocation = AppConfig.export.from.dbs.dbConfigMap(testdbName)(DBProps.outputFileLocation)
+    val region = AppConfig.export.region
+    val remoteFilePath = s"$remoteOutputLocation/${region}_${testdbName}.gz"
+    val remoteSuccessFilePath = s"$remoteOutputLocation/${CommandProcessor.NON_DATA_FILE_PREFIX}$runDateStr/_SUCCESS"
+
+    assert(Files.exists(Paths.get(remoteFilePath)), s"Data for db[$testdbName] not present on remote server at path[$remoteFilePath]")
+    assert(Files.exists(Paths.get(remoteSuccessFilePath)), s"Success file not created on remote server at path[$remoteFilePath]")
+    assert(scala.io.Source.fromFile(remoteSuccessFilePath).mkString.replaceFirst("$\\n", "") == s"$testdbName=5", "Success file content mismatch")
 
   }
 
