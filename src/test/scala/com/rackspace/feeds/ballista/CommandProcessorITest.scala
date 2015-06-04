@@ -17,6 +17,8 @@ import org.apache.commons.lang3.StringUtils
 import org.h2.tools.Csv
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 
 /**
@@ -78,6 +80,7 @@ class TestCommandProcessor extends CommandProcessor {
   
 }
 
+@RunWith(classOf[JUnitRunner])
 class CommandProcessorITest extends FunSuite with BeforeAndAfterAll {
 
   override def beforeAll() = {
