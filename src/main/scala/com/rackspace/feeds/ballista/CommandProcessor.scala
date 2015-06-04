@@ -22,6 +22,8 @@ object CommandProcessor {
   val EXIT_CODE_SUCCESS: Int = 0
   val EXIT_CODE_INVALD_ARGUMENTS: Int = 1
   val EXIT_CODE_FAILURE: Int = 2
+
+  val NON_DATA_FILE_PREFIX = "_"
 }
 
 /**
@@ -38,7 +40,7 @@ class CommandProcessor {
   val SUCCESS_FILE_NAME: String = "_SUCCESS"
 
   //creates a map of outputLocation and Set[dbNames] storing data in that output location
-  val outputLocationMap = new mutable.HashMap[String, mutable.Set[String]] with mutable.MultiMap[String, String]
+  val outputLocationMap = new mutable.HashMap[String, mutable.Set[(String, Boolean)]] with mutable.MultiMap[String, (String, Boolean)]
   
   def doProcess(commandOptions: CommandOptions): Int = {
     logger.info(s"Process is being run with these options $commandOptions")
@@ -50,17 +52,26 @@ class CommandProcessor {
 
     commandOptions.dryrun match {
       case true => new DryRunProcessor().dryrun()
-      case false => {
+      case false => 
+      {
 
         //create remote directories for each unique remote output locations across database names being exported
-        val failureCount = commandOptions.dbNames
-          .map(dbName => dbConfigMap(dbName)(DBProps.outputFileLocation))
-          .toSet
-          .map((outputFileLocation: String) => scpEmptyDirectory(commandOptions.runDate, outputFileLocation))
-          .count(_.isFailure)
+        def createEmptyDirs(isOutputFileDateDriven: Boolean, dataFolderPrefix: String) = {
+          commandOptions.dbNames
+            .filter(dbName => dbConfigMap(dbName)(DBProps.isOutputFileDateDriven).toBoolean == isOutputFileDateDriven)
+            .map(dbName => dbConfigMap(dbName)(DBProps.outputFileLocation))
+            .toSet
+            .map((outputFileLocation: String) => scpEmptyDirectory(commandOptions.runDate, outputFileLocation, dataFolderPrefix))
+        }
+        
+        //dbNames which has isOutputFileDateDriven configured to true would create remote dir as ${runDate) at $outputFileLocation
+        val failureCount1 = createEmptyDirs(isOutputFileDateDriven = true, "").count(_.isFailure)
+        
+        //dbNames which has isOutputFileDateDriven configured to false would create remote dir as _${runDate) at $outputFileLocation
+        val failureCount2 = createEmptyDirs(isOutputFileDateDriven = false, CommandProcessor.NON_DATA_FILE_PREFIX).count(_.isFailure)
 
-        if (failureCount > 0)
-          return getExitCode(failureCount)
+        if (failureCount1 > 0 || failureCount2 > 0)
+          return getExitCode(failureCount1 + failureCount2)
         
         if (commandOptions.scponly) {
 
@@ -94,9 +105,9 @@ class CommandProcessor {
 
   }
 
-  def scpEmptyDirectory(runDate: DateTime, outputFileLocation: String): Try[Unit] = {
+  def scpEmptyDirectory(runDate: DateTime, outputFileLocation: String, remoteDirPrefix: String): Try[Unit] = {
 
-    val remoteDir: String = getRunDateString(runDate)
+    val remoteDir: String = s"$remoteDirPrefix${getRunDateString(runDate)}"
     val result = Try(scpUtil.scpEmptyDirectory(sessionInfo, outputFileLocation, remoteDir))
 
     result match {
@@ -125,9 +136,11 @@ class CommandProcessor {
     
     result match {
       case Failure(ex) => logger.error(s"Exception exporting data from database [$dbName]", ex)
-      case Success(_) =>
+      case Success(_) => {
         val outputFileLocation = dbConfigMap(dbName)(DBProps.outputFileLocation)
-        outputLocationMap.addBinding(outputFileLocation, dbName)
+        val isOutputFileDateDriven = dbConfigMap(dbName)(DBProps.isOutputFileDateDriven).toBoolean
+        outputLocationMap.addBinding(outputFileLocation, (dbName, isOutputFileDateDriven))
+      }
     }
 
     result
@@ -149,9 +162,9 @@ class CommandProcessor {
   } 
 
   /**
-   * This method creates a _SUCCESS file for each unique output file location. If multiple databases
-   * have the same output file location, the _SUCCESS file will indicate the success of each of these
-   * databases and will have information of each of them.
+   * This method creates a _SUCCESS file for each unique output file location and isOutputFileDateDriven. 
+   * If multiple databases have the same output file location, the _SUCCESS file will indicate the success 
+   * of each of these databases and will have information of each of them.
    * 
    * Ths _SUCCESS file will contain data in the below format.
    * 
@@ -163,33 +176,49 @@ class CommandProcessor {
    */
   def createSuccessFile(resultMap: Map[String, Long],
                         runDate: DateTime): Unit = {
+
+    def createAndSCPSuccessFile(outputFileLocation: String, dbNameSet: Set[(String, Boolean)], remoteDirPrefix: String): Unit = {
+      if (dbNameSet.size == 0) return
+      
+      logger.info(s"Writing success file in $outputFileLocation for databases[${dbNameSet.mkString(",")}]")
+
+      val localFilePath: String = java.io.File.createTempFile("temp", "_success").getAbsolutePath
+      val writer: Writer = getWriter(localFilePath)
+
+      try {
+
+        dbNameSet
+          .foreach {
+          case (dbName, isOutputFileDateDriven) => {
+            val numberOfRecordsWritten = resultMap.getOrElse(dbName, Long.MinValue)
+            writer.write(s"$dbName=$numberOfRecordsWritten\n")
+          }
+        }
+
+      } finally {
+        IOUtils.closeQuietly(writer)
+      }
+      logger.info(s"Completed writing success file $localFilePath")
+
+      //remote directory is already created during export process
+      scpUtil.scpFile(sessionInfo, localFilePath, s"$outputFileLocation/${remoteDirPrefix}${getRunDateString(runDate)}", SUCCESS_FILE_NAME)
+
+    }
     
     outputLocationMap.foreach {
       case (outputFileLocation, dbNameSet) => {
-        logger.info(s"Writing success file in $outputFileLocation for databases[${dbNameSet.mkString(",")}]")
-        
-        val localFilePath: String = java.io.File.createTempFile("temp", "_success").getAbsolutePath
-        val writer: Writer = getWriter(localFilePath)
-        
-        try {
-          
-          dbNameSet.foreach(dbName => {
-            val numberOfRecordsWritten = resultMap.getOrElse(dbName, Long.MinValue)
-            writer.write(s"$dbName=$numberOfRecordsWritten\n")
-          })
 
-        } finally {
-          IOUtils.closeQuietly(writer)
-        }
-        logger.info(s"Completed writing success file $localFilePath")
+        //dbNames which has isOutputFileDateDriven configured to true would write _SUCCESS file at $outputFileLocation/${runDate)
+        createAndSCPSuccessFile(outputFileLocation, dbNameSet.filter(_._2 == true), "")
 
-        //remote directory is already created during export process
-        scpUtil.scpFile(sessionInfo, localFilePath, s"$outputFileLocation/${getRunDateString(runDate)}", SUCCESS_FILE_NAME)
-
+        //dbNames which has isOutputFileDateDriven configured to false would write _SUCCESS file at $outputFileLocation/_${runDate)
+        createAndSCPSuccessFile(outputFileLocation, dbNameSet.filter(_._2 == false), CommandProcessor.NON_DATA_FILE_PREFIX)
       }
     }
   }
 
+
+  
   def getRunDateString(runDate: DateTime): String = {
     DateTimeFormat.forPattern("yyyy-MM-dd").print(runDate)
   }
