@@ -6,6 +6,7 @@ import scopt.Read
 
 case class CommandOptions(runDate: DateTime = DateTime.now.minusDays(1).withTimeAtStartOfDay(),
                           dbNames: Set[String] = AppConfig.export.from.dbs.dbConfigMap.keySet,
+                          tenantIds: Set[String] = null,
                           scponly: Boolean = false,
                           dryrun: Boolean = false)
 
@@ -50,6 +51,19 @@ object CommandOptionsParser {
           |Available dbNames for this configuration: ${dbNamesSet.mkString(",")}
         """.stripMargin.replaceAll("\n", " ")
       }
+    opt[Set[String]]('t', "tenantIds") action { (x, c) =>
+      c.copy(tenantIds = x)
+    } validate { tenantIds =>
+      if (tenantIds.size > 0)
+        success
+      else
+        failure(s"Tenant Ids must be specified and cannot be empty.")
+    } text {
+      s"""
+          |tenantIds is comma separated list of tenant ids.
+          |Data belonging to these tenant ids will be exported
+        """.stripMargin.replaceAll("\n", " ")
+    }
     opt[Unit]("scponly") action { (x, c) =>
       c.copy(scponly = true)
     } text {

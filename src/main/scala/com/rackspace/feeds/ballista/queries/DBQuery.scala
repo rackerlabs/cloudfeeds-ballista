@@ -21,4 +21,5 @@ trait DBQuery {
    * @return a database query to extract data
    */
   def fetch(runDate: DateTime, region: String, dataSource: DataSource, maxRowLimit: String): String
+  def fetch(runDate: DateTime, tenantIds: Set[String], region: String, dataSource: DataSource, maxRowLimit: String): String
 }

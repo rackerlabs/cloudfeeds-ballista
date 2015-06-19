@@ -30,8 +30,8 @@ class TestEntriesDBQuery extends EntriesDBQuery {
   override def getTableName(runDate: DateTime, dataSource: DataSource): String = "entries"
   override def isTableExist(tableName: String, dataSource: DataSource) = true
 
-  override def fetch(runDate: DateTime, region: String, dataSource: DataSource, maxRowLimit: String): String = {
-    val pgSQL = super.fetch(runDate, region, dataSource, maxRowLimit)
+  override def fetch(runDate: DateTime, tenantIds: Set[String], region: String, dataSource: DataSource, maxRowLimit: String): String = {
+    val pgSQL = super.fetch(runDate, tenantIds, region, dataSource, maxRowLimit)
     
     //hack: To use the same select query as the one used by the actual implementation. 
     //Stripping out the copy part of the sql and converting some functions to h2 specific
@@ -151,5 +151,23 @@ class CommandProcessorITest extends FunSuite with BeforeAndAfterAll {
 
   }
 
+  test("Verify that extracting tenantIds data and scp'ing is successful") {
+    val runDate: DateTime = DateTime.now.minusDays(1).withTimeAtStartOfDay()
+    val runDateStr: String = DateTimeFormat.forPattern("yyyy-MM-dd").print(runDate)
+    val tenantIds: Set[String] = Set("83c90806", "e2ceaa2f")
 
+    val testdbName: String = "testdb1"
+    val exitCode = new TestCommandProcessor().doProcess(CommandOptions(runDate, Set(testdbName), tenantIds))
+
+    assert(exitCode == 0, "Wrong exit code")
+
+    val remoteOutputLocation = AppConfig.export.from.dbs.dbConfigMap(testdbName)(DBProps.outputFileLocation)
+    val region = AppConfig.export.region
+    val remoteFilePath = s"$remoteOutputLocation/${region}_${testdbName}.gz"
+    val remoteSuccessFilePath = s"$remoteOutputLocation/${CommandProcessor.NON_DATA_FILE_PREFIX}$runDateStr/_SUCCESS"
+
+    assert(Files.exists(Paths.get(remoteFilePath)), s"Data for db[$testdbName] not present on remote server at path[$remoteFilePath]")
+    assert(Files.exists(Paths.get(remoteSuccessFilePath)), s"Success file not created on remote server at path[$remoteFilePath]")
+    assert(scala.io.Source.fromFile(remoteSuccessFilePath).mkString.replaceFirst("$\\n", "") == s"$testdbName=2", "Success file content mismatch")
+  }
 }
