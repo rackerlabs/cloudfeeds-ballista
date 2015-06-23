@@ -17,7 +17,7 @@ class EntriesDBQuery extends DBQuery {
   val logger = LoggerFactory.getLogger(getClass)
   
   override def fetch(runDate: DateTime, region: String, dataSource: DataSource, maxRowLimit: String): String = {
-    this.fetch(runDate, null, region, dataSource, maxRowLimit)
+    this.fetch(runDate, Set.empty, region, dataSource, maxRowLimit)
   }
 
   override def fetch(runDate: DateTime, tenantIds: Set[String], region: String, dataSource: DataSource, maxRowLimit: String): String = {
@@ -31,7 +31,7 @@ class EntriesDBQuery extends DBQuery {
     }
 
     var whereClause = ""
-    if (tenantIds != null) {
+    if (tenantIds != Set.empty) {
       // escape each tenantId to prevent SQL injection
       val escapedTenantIds = tenantIds.map(tid => tid.replace("'", "''"))
       whereClause = "WHERE tenantid in ('" + escapedTenantIds.toArray.mkString("','") + "')"

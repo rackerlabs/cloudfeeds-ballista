@@ -6,7 +6,7 @@ import scopt.Read
 
 case class CommandOptions(runDate: DateTime = DateTime.now.minusDays(1).withTimeAtStartOfDay(),
                           dbNames: Set[String] = AppConfig.export.from.dbs.dbConfigMap.keySet,
-                          tenantIds: Set[String] = null,
+                          tenantIds: Set[String] = Set.empty,
                           scponly: Boolean = false,
                           dryrun: Boolean = false)
 

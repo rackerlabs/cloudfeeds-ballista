@@ -83,7 +83,7 @@ class DefaultExportSvc(dbName: String) extends ExportSvc {
     val region = AppConfig.export.region
     val tenantIds = queryParams("tenantIds").asInstanceOf[Set[String]]
 
-    if (tenantIds != null) {
+    if (tenantIds != Set.empty) {
       // run fetch for specific tenantIds
       dbQuery.fetch(queryParams("runDate").asInstanceOf[DateTime], tenantIds, region, dataSource, AppConfig.export.maxRowLimit)
     }
