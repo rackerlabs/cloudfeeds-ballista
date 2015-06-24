@@ -13,7 +13,7 @@ class PreferencesDBQuery extends DBQuery {
   
   override def fetch(runDate: DateTime, tenantIds: Set[String], region: String, dataSource: DataSource, maxRowLimit: String): String = {
     var whereClause = ""
-    if (tenantIds != Set.empty) {
+    if ((tenantIds != null) && (tenantIds.nonEmpty)) {
       // escape each tenantId to prevent SQL injection
       val escapedTenantIds = tenantIds.map(tid => tid.replace("'", "''"))
       whereClause = "WHERE id in ('" + escapedTenantIds.toArray.mkString("','") + "')"
