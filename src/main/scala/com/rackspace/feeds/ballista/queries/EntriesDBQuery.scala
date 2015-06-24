@@ -31,7 +31,7 @@ class EntriesDBQuery extends DBQuery {
     }
 
     var whereClause = ""
-    if (tenantIds != Set.empty) {
+    if ((tenantIds != null) && (tenantIds.nonEmpty)) {
       // escape each tenantId to prevent SQL injection
       val escapedTenantIds = tenantIds.map(tid => tid.replace("'", "''"))
       whereClause = "WHERE tenantid in ('" + escapedTenantIds.toArray.mkString("','") + "')"
