@@ -54,6 +54,8 @@ The app expects the configuration files to be present at /etc/cloudfeeds-ballist
 
   -d <value> | --runDate <value>
          runDate is a date in the format yyyy-MM-dd. Data belonging to this date will be exported. Default value is yesterday.           
+  -t <value> | --tenantIds <value>
+        tenantIds is comma seprated list of tenant ids to be exported.  Default value is all data for all tenant ids.
   -n <value> | --dbNames <value>
          dbNames is comma separated list of database names to be exported. Default value is all the databases configured.           
   --dryrun

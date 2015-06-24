@@ -17,28 +17,40 @@ class EntriesDBQuery extends DBQuery {
   val logger = LoggerFactory.getLogger(getClass)
   
   override def fetch(runDate: DateTime, region: String, dataSource: DataSource, maxRowLimit: String): String = {
+    this.fetch(runDate, Set.empty, region, dataSource, maxRowLimit)
+  }
+
+  override def fetch(runDate: DateTime, tenantIds: Set[String], region: String, dataSource: DataSource, maxRowLimit: String): String = {
     val tableName = getTableName(runDate, dataSource)
-    
-    logger.debug(s"Preparing query to extract data from partitioned entries table[$tableName] for runDate[$runDate]")
+
+    logger.debug(s"Preparing query to extract data from partitioned entries table[$tableName] for runDate[$runDate], tenantIds[$tenantIds]")
     val runDateStr = dateTimeFormatter.print(runDate)
-    
+
     if (!isTableExist(tableName, dataSource)) {
       throw new RuntimeException("Partitioned table[$tableName] does not exist")
     }
+
+    var whereClause = ""
+    if (tenantIds != Set.empty) {
+      // escape each tenantId to prevent SQL injection
+      val escapedTenantIds = tenantIds.map(tid => tid.replace("'", "''"))
+      whereClause = "WHERE tenantid in ('" + escapedTenantIds.toArray.mkString("','") + "')"
+    }
+
     s"""
-       | COPY (SELECT id, 
-       |              entryid, 
-       |              creationdate, 
-       |              datelastupdated, 
+       | COPY (SELECT id,
+       |              entryid,
+       |              creationdate,
+       |              datelastupdated,
        |              regexp_replace(entrybody, E'[\\n\\r]+', ' ', 'g') as entrybody,
        |              array_to_string( categories, '|' ) as categories,
-       |              eventtype, 
-       |              tenantid, 
+       |              eventtype,
+       |              tenantid,
        |              '$region' as region,
        |              '$runDateStr' as date,
        |              feed
-       |         FROM $tableName
-       |        limit $maxRowLimit)
+       |         FROM $tableName $whereClause
+       |         LIMIT $maxRowLimit)
        |   TO STDOUT
        | WITH DELIMITER $PG_DELIMITER
      """.stripMargin

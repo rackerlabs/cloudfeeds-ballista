@@ -126,8 +126,8 @@ class CommandProcessor {
     }
   }
 
-  def createQueryParams(commandOptions: CommandOptions): Map[String, DateTime] = {
-    Map("runDate" -> commandOptions.runDate)
+  def createQueryParams(commandOptions: CommandOptions): Map[String, Any] = {
+    Map("runDate" -> commandOptions.runDate, "tenantIds" -> commandOptions.tenantIds)
   }
 
   def export(queryParams: Map[String, Any], dbName: String): Try[(String, Long)] = {
