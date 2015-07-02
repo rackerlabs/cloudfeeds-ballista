@@ -23,7 +23,7 @@ class PreferencesDBQuery extends DBQuery {
        | COPY (SELECT id,
        |              alternate_id,
        |              json_extract_path_text(payload::json, 'enabled') as enabled,
-       |              payload,
+       |              regexp_replace(payload, E'[\\n\\r]+', ' ', 'g') as payload,
        |              created,
        |              updated
        |         FROM preferences $whereClause
