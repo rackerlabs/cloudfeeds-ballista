@@ -33,8 +33,7 @@ class CommandOptionsParserTest extends FunSuite {
   }
 
   val referenceDate = DateTime.now
-  List(DateTime.now,
-       DateTime.now.plusDays(1),
+  List(DateTime.now.plusDays(1),
        DateTime.now.minusDays(AppConfig.export.daysDataAvailable + 1)
   ).foreach {dateTime =>
     test (s"rundate should be invalid when rundate is $dateTime on $referenceDate") {
@@ -47,7 +46,7 @@ class CommandOptionsParserTest extends FunSuite {
     }
   }
   
-  (1 to AppConfig.export.daysDataAvailable).foreach{numberOfDays =>
+  (0 to AppConfig.export.daysDataAvailable).foreach{numberOfDays =>
     test (s"rundate should be valid when rundate is $numberOfDays days back from $referenceDate") {
 
       val runDate = referenceDate.minusDays(numberOfDays)
@@ -60,12 +59,22 @@ class CommandOptionsParserTest extends FunSuite {
   }
   
   test ("parsing validation should fail for invalid rundate") {
-    val args = Array[String]("-d", dateTimePattern.print(DateTime.now))
+    val args = Array[String]("-d", dateTimePattern.print(DateTime.now.plusDays(1)))
 
     CommandOptionsParser.getCommandOptions(args) match {
       case Some(commandOptions) =>
         fail("Parsing should not be successful with these command options")
       case None => 
+    }
+  }
+
+  test ("parsing validation should fail for missing tenantIds value") {
+    val args = Array[String]("-t")
+
+    CommandOptionsParser.getCommandOptions(args) match {
+      case Some(commandOptions) =>
+        fail("Parsing should not be successful with missing tenantIds value when using the -t switch")
+      case None =>
     }
   }
   
@@ -86,7 +95,7 @@ class CommandOptionsParserTest extends FunSuite {
   }
 
   test ("parsing validation should fail for invalid overwrite flag") {
-    val args = Array[String]("-o", "yeah")
+    val args = Array[String]("-o", "invalid_command_option")
 
     CommandOptionsParser.getCommandOptions(args) match {
       case Some(commandOptions) =>
@@ -98,16 +107,21 @@ class CommandOptionsParserTest extends FunSuite {
   test ("verify options sent from command line are being set correctly") {
     val runDate: DateTime = DateTime.now.minusDays(2).withTimeAtStartOfDay()
     val dbNames: Set[String] = AppConfig.export.from.dbs.dbConfigMap.keySet
+    val tenantIds = Set("tenant1", "tenant2", "tenant3", "tenant4")
 
     val runDateStr: String = dateTimePattern.print(runDate)
     val dbNamesStr: String = dbNames.mkString(",")
+    val tenantIdsStr: String = tenantIds.mkString(",")
 
-    val args = Array[String]("--runDate", runDateStr, "--dbNames", dbNamesStr)
+    val args = Array[String]("--runDate", runDateStr, "--dbNames", dbNamesStr, "--tenantIds", tenantIdsStr, "--dryrun", "--scponly")
 
     CommandOptionsParser.getCommandOptions(args) match {
       case Some(commandOptions) =>
         assert(commandOptions.runDate === runDate, "runDate option is not set to the correct value")
         assert(commandOptions.dbNames === dbNames, "dbNames option is not set to the correct value")
+        assert(commandOptions.tenantIds === tenantIds, "tenantIds option is not set to the correct value")
+        assert(commandOptions.dryrun === true, "dryrun option is not set to the correct value")
+        assert(commandOptions.scponly === true, "scponly option is not set to the correct value")
       case None => fail("Unable to parse command options")
     }
   }

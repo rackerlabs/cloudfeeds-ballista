@@ -28,7 +28,7 @@ object AppConfig {
 
   object export {
 
-    val datacenter = config.getString("appConfig.datacenter")
+    val region = config.getString("appConfig.region")
     val daysDataAvailable = config.getInt("appConfig.daysDataAvailable")
     val tempOutputDir = config.getString("appConfig.tempOutputDir").replaceFirst("/$", "")
     val maxRowLimit = config.getString("appConfig.maxRowLimit")

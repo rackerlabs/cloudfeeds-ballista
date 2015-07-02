@@ -16,9 +16,10 @@ trait DBQuery {
    * Generates a database query to extract data from the database.
    *
    * @param runDate
-   * @param datacenter
+   * @param region
    * @param dataSource
    * @return a database query to extract data
    */
-  def fetch(runDate: DateTime, datacenter: String, dataSource: DataSource, maxRowLimit: String): String
+  def fetch(runDate: DateTime, region: String, dataSource: DataSource, maxRowLimit: String): String
+  def fetch(runDate: DateTime, tenantIds: Set[String], region: String, dataSource: DataSource, maxRowLimit: String): String
 }

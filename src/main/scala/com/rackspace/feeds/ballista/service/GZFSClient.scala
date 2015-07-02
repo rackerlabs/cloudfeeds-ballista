@@ -12,7 +12,7 @@ class GZFSClient extends FSClient {
   override def getOutputStream(outputFilePath: String): OutputStream = {
 
     val fos: FileOutputStream = new FileOutputStream(outputFilePath)
-    new GZIPOutputStream(fos);
+    new GZIPOutputStream(fos)
   }
 
 }

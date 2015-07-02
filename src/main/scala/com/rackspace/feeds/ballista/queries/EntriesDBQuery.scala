@@ -16,29 +16,41 @@ class EntriesDBQuery extends DBQuery {
   val dateTimeFormatter: DateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd")
   val logger = LoggerFactory.getLogger(getClass)
   
-  override def fetch(runDate: DateTime, datacenter: String, dataSource: DataSource, maxRowLimit: String): String = {
+  override def fetch(runDate: DateTime, region: String, dataSource: DataSource, maxRowLimit: String): String = {
+    this.fetch(runDate, Set.empty, region, dataSource, maxRowLimit)
+  }
+
+  override def fetch(runDate: DateTime, tenantIds: Set[String], region: String, dataSource: DataSource, maxRowLimit: String): String = {
     val tableName = getTableName(runDate, dataSource)
-    
-    logger.debug(s"Preparing query to extract data from partitioned entries table[$tableName] for runDate[$runDate]")
+
+    logger.debug(s"Preparing query to extract data from partitioned entries table[$tableName] for runDate[$runDate], tenantIds[$tenantIds]")
     val runDateStr = dateTimeFormatter.print(runDate)
-    
+
     if (!isTableExist(tableName, dataSource)) {
       throw new RuntimeException("Partitioned table[$tableName] does not exist")
     }
+
+    var whereClause = ""
+    if ((tenantIds != null) && (tenantIds.nonEmpty)) {
+      // escape each tenantId to prevent SQL injection
+      val escapedTenantIds = tenantIds.map(tid => tid.replace("'", "''"))
+      whereClause = "WHERE tenantid in ('" + escapedTenantIds.toArray.mkString("','") + "')"
+    }
+
     s"""
-       | COPY (SELECT id, 
-       |              entryid, 
-       |              creationdate, 
-       |              datelastupdated, 
+       | COPY (SELECT id,
+       |              entryid,
+       |              creationdate,
+       |              datelastupdated,
        |              regexp_replace(entrybody, E'[\\n\\r]+', ' ', 'g') as entrybody,
        |              array_to_string( categories, '|' ) as categories,
-       |              eventtype, 
-       |              tenantid, 
-       |              '$datacenter' as region,
-       |              feed, 
-       |              '$runDateStr' as date
-       |         FROM $tableName
-       |        limit $maxRowLimit)
+       |              eventtype,
+       |              tenantid,
+       |              '$region' as region,
+       |              '$runDateStr' as date,
+       |              feed
+       |         FROM $tableName $whereClause
+       |         LIMIT $maxRowLimit)
        |   TO STDOUT
        | WITH DELIMITER $PG_DELIMITER
      """.stripMargin
@@ -52,7 +64,7 @@ class EntriesDBQuery extends DBQuery {
    * @param dataSource
    * @return partitioned entries table name
    */
-  private def getTableName(runDate: DateTime, dataSource: DataSource): String = {
+  protected def getTableName(runDate: DateTime, dataSource: DataSource): String = {
 
     val runDateStr = dateTimeFormatter.print(runDate)
 
@@ -96,7 +108,7 @@ class EntriesDBQuery extends DBQuery {
    * @param dataSource
    * @return true/false indicating the presence of the table.
    */
-  private def isTableExist(tableName: String, dataSource: DataSource) = {
+  protected def isTableExist(tableName: String, dataSource: DataSource) = {
 
     var connection:Connection  = null
     var tableCount:Int = 0
