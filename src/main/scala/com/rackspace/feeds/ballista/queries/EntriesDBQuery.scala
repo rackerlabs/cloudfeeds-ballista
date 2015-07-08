@@ -53,6 +53,7 @@ class EntriesDBQuery extends DBQuery {
        |         LIMIT $maxRowLimit)
        |   TO STDOUT
        | WITH DELIMITER $PG_DELIMITER
+       |      NULL ''  -- Specifies the string that represents a null value
      """.stripMargin
   }
 
