@@ -171,7 +171,7 @@ import groovyx.net.http.HTTPBuilder
 import static groovyx.net.http.ContentType.*
 import static groovyx.net.http.Method.*
 
-task uploadVeracode(dependsOn: 'jar') {
+task uploadVeracode << {
 
     // some globals used throughout the script
     def veracodeUrl = 'https://analysiscenter.veracode.com/api/'
