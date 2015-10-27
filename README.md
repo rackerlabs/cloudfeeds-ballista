@@ -1,6 +1,8 @@
 cloudfeeds-ballista
 ==========================
 
+*This project is currently in sustaining mode as deployed within Rackspace.  For more information on how to support this in sustaining mode please see https://one.rackspace.com/display/cloudfeeds/Cloud+Feeds+Sustaining+Mode+Documentation+Start+Page.*
+
 A command line utility to migrate data from RDBMS databases to HDFS using SCP.
 
 The application can be configured to export data corresponding to multiple databases. For each 
